@@ -15,7 +15,7 @@ ensure_gh_auth() {
   if ! "$MISE" exec -- gh auth status >/dev/null 2>&1; then
     can_prompt || die "Not signed in to GitHub. Run ranch from a terminal, or run 'gh auth login' first."
     info "Sign in to GitHub so ranch can read your team config:"
-    "$MISE" exec -- gh auth login --hostname github.com --git-protocol https --web </dev/tty
+    gh_login
   fi
 }
 
