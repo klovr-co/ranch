@@ -27,10 +27,12 @@ That's it. Run the same line on the next machine, and the next.
 | `ranch login` | Sign in to anything missing (GitHub, Tailscale, Claude Code, Codex) |
 | `ranch login status` | Show what's signed in |
 | `ranch doctor` | Show what's installed |
+| `ranch join` | At a new Linux server: join your network by scanning a QR code |
+| `ranch add [user@]machine` | From your main computer: set that server up remotely, logins carried over |
 
 Re-run `ranch` any time. It only changes what's different, and keeps itself up to date.
 
-## Adding a server from your main computer *(coming next)*
+## Adding a server from your main computer *(new)*
 
 Signing in on a server with no screen means copying links and codes by hand. Instead, do one step at the server and everything else from your main computer, where links are clickable:
 

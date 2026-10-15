@@ -13,6 +13,9 @@ done
 ROOT="$(cd "$(dirname "$src")/.." && pwd)"
 unset src dir
 
+# Non-interactive shells (e.g. over SSH) don't load the user's profile; find our tools anyway.
+export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
+
 # shellcheck source=../lib/common.sh
 . "$ROOT/lib/common.sh"
 . "$ROOT/lib/os.sh"
@@ -20,6 +23,7 @@ unset src dir
 . "$ROOT/lib/teams.sh"
 . "$ROOT/lib/network.sh"
 . "$ROOT/lib/login.sh"
+. "$ROOT/lib/remote.sh"
 
 usage() {
   cat <<'EOF'
@@ -30,6 +34,9 @@ ranch — add this machine to your ranch
   ranch login                 Sign in to anything missing (GitHub, Tailscale, Claude, Codex)
   ranch login status          Only show what's signed in
   ranch doctor                Show what's installed
+
+  ranch join                  At a new Linux server: join your network (scan a QR code), nothing else
+  ranch add [user@]machine    From your main computer: set that server up remotely, logins carried over
 
 Safe to re-run any time.
 EOF
@@ -47,6 +54,16 @@ self_update() {
     info "ranch updated; restarting"
     RANCH_UPDATED=1 exec bash "$ROOT/bin/ranch" "$@"
   fi
+}
+
+# A snapshot install (made before git existed) becomes a clone once git is installed,
+# so self_update can keep it current.
+adopt_git() {
+  [ "$ROOT" = "$HOME/.local/share/ranch" ] && [ ! -d "$ROOT/.git" ] && has git || return 0
+  git -C "$ROOT" init -q
+  git -C "$ROOT" remote add origin "${RANCH_REPO:-https://github.com/xian-jun/ranch.git}"
+  git -C "$ROOT" fetch -q origin main && git -C "$ROOT" reset -q --hard origin/main \
+    && git -C "$ROOT" branch -q -u origin/main 2>/dev/null || true
 }
 
 # Put `ranch` on PATH so it can be run from anywhere.
@@ -73,11 +90,14 @@ doctor() {
 
 main() {
   self_update "$@"
-  local teams=""
+  local teams="" logins=1
   while [ $# -gt 0 ]; do
     case "$1" in
       -h|--help|help) usage; exit 0 ;;
       doctor) doctor; exit 0 ;;
+      join) detect_os; join_network; exit 0 ;;
+      add) add_machine "${2:-}"; exit 0 ;;
+      --no-login) logins=0; shift ;;
       login)
         detect_os
         if [ "${2:-}" = status ]; then run_logins status; else run_logins run; fi
@@ -90,6 +110,7 @@ main() {
 
   detect_os
   install_base_packages
+  adopt_git
   install_mise
   install_base_tools
   install_agent_clis
@@ -102,7 +123,7 @@ main() {
     while IFS= read -r t; do [ -n "$t" ] && apply_team "$t"; done < "$TEAMS_LIST"
   fi
 
-  run_logins run
+  if [ "$logins" = 1 ]; then run_logins run; fi
 
   step "Done"
   info "This machine is on the ranch. Open a new terminal, then run 'ranch doctor' any time."
