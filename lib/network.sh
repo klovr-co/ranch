@@ -16,14 +16,24 @@ install_tailscale() {
   fi
   case "$OS" in
     macos)
+      if ! sudo -n true 2>/dev/null && ! can_prompt; then
+        warn "Skipped: installing Tailscale needs your Mac password, and there's no terminal to type it in."
+        warn "Run setup from the Terminal app to finish this step."
+        return
+      fi
       local pkg
       pkg="$(mktemp -d)/Tailscale.pkg"
       curl -fsSL -o "$pkg" https://pkgs.tailscale.com/stable/Tailscale-latest-macos.pkg
       info "Installing the Tailscale app (asks for your Mac password)"
-      sudo installer -pkg "$pkg" -target / >/dev/null </dev/tty
+      if can_prompt; then sudo installer -pkg "$pkg" -target / >/dev/null </dev/tty
+      else sudo installer -pkg "$pkg" -target / >/dev/null; fi
       rm -f "$pkg"
       ;;
     *)
+      if ! sudo -n true 2>/dev/null && ! can_prompt; then
+        warn "Skipped: installing Tailscale needs sudo, and there's no terminal to type the password in."
+        return
+      fi
       curl -fsSL https://tailscale.com/install.sh | sh >/dev/null 2>&1 || die "Tailscale install failed"
       ;;
   esac
