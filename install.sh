@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # One-line installer:
-#   curl -fsSL https://raw.githubusercontent.com/xian-jun/ranch/main/install.sh | bash -s -- --team owner/ranch-config
+#   curl -fsSL xian-jun.github.io/ranch | bash -s -- --team owner/ranch-config
 # Fetches this repo into ~/.local/share/ranch, then runs bin/ranch with the same arguments.
 set -euo pipefail
 
