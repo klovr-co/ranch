@@ -28,6 +28,9 @@ install_base_tools() {
   step "Base tools"
   "$MISE" --quiet use --global --yes gh@latest >/dev/null
   ok "gh $("$MISE" exec -- gh --version | head -1 | awk '{print $3}')"
+  # Secret manager CLI: secrets are injected when code runs (infisical run -- …), never saved to .env files.
+  "$MISE" --quiet use --global --yes infisical@latest >/dev/null
+  ok "infisical $("$MISE" exec -- infisical --version 2>/dev/null | awk '{print $3}')"
   # Node is needed for the agent CLIs. Keep any Node the user already has on PATH.
   if ! has node; then
     "$MISE" --quiet use --global --yes node@lts >/dev/null

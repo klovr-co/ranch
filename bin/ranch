@@ -36,6 +36,7 @@ ranch — add this machine to your ranch
   ranch login status          Only show what's signed in
   ranch doctor                Show what's installed
   ranch status                This machine, your network, and every server you've added
+  ranch update                Update every server you've added to the newest ranch
 
   ranch join                  At a new Linux server: join your network (scan a QR code), nothing else
   ranch add [user@]machine    From your main computer: set that server up remotely, logins carried over
@@ -100,6 +101,7 @@ main() {
       -h|--help|help) usage; exit 0 ;;
       doctor) doctor; exit 0 ;;
       status) detect_os; show_status; exit 0 ;;
+      update) detect_os; update_all; exit 0 ;;
       join) detect_os; join_network; exit 0 ;;
       add) add_machine "${2:-}"; exit 0 ;;
       pair) [ -n "${2:-}" ] || die "Usage: ranch pair [user@]machine"

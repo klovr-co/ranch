@@ -67,9 +67,26 @@ login_codex() {
   fi
 }
 
-# The secret manager is installed in its own step; until then just report.
+# Infisical: your secrets, injected at runtime. Each of your own machines signs in as you.
 login_secrets() {
-  if has infisical; then ok "Infisical    installed"; else info "· Secrets      not set up yet"; fi
+  local inf="$MISE exec -- infisical"
+  if ! "$MISE" which infisical >/dev/null 2>&1; then info "· Secrets      Infisical not installed"; return; fi
+  local st
+  st="$($inf login status 2>&1 || true)"
+  if ! printf '%s' "$st" | grep -qi 'not authenticated'; then
+    ok "Secrets      Infisical $(printf '%s' "$st" | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | head -1)"
+  elif [ "${1:-}" = run ]; then
+    if headless; then
+      info "→ Infisical: on a server, sign in from your main computer with 'ranch add', or here with:"
+      info "  infisical login --interactive   (needs an Infisical password; GitHub/Google sign-in won't work here)"
+    else
+      info "→ Infisical: choose your region (US unless you picked EU), then sign in in the browser"
+      $inf login </dev/tty || warn "Infisical login skipped"
+      login_secrets status
+    fi
+  else
+    warn "Secrets      Infisical not signed in"
+  fi
 }
 
 # ranch login        → sign in to anything missing
@@ -83,7 +100,7 @@ run_logins() {
   fi
   login_github "$mode"
   login_tailscale "$mode"
-  login_secrets
+  login_secrets "$mode"
   login_claude "$mode"
   login_codex "$mode"
   login_t3

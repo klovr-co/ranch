@@ -195,3 +195,21 @@ show_status() {
     fi
   done < "$MACHINES_LIST"
 }
+
+# Update every server you've added: each pulls the newest ranch and re-applies it (logins untouched).
+update_all() {
+  [ -s "$MACHINES_LIST" ] || { info "No servers added yet (ranch add [user@]machine)."; return 0; }
+  local target
+  while IFS= read -r target; do
+    [ -n "$target" ] || continue
+    step "Updating $target"
+    # -t so a password prompt (rare: only when new system packages are needed) can be answered here.
+    if can_prompt; then
+      ssh -t -o ConnectTimeout=10 "$target" "curl -fsSL $RANCH_URL | bash -s -- --no-login" </dev/tty \
+        || warn "$target: update failed or unreachable"
+    else
+      ssh -o BatchMode=yes -o ConnectTimeout=10 "$target" "curl -fsSL $RANCH_URL | bash -s -- --no-login" \
+        || warn "$target: update failed or unreachable"
+    fi
+  done < "$MACHINES_LIST"
+}

@@ -29,6 +29,7 @@ That's it. Run the same line on the next machine, and the next.
 | `ranch login status` | Show what's signed in |
 | `ranch doctor` | Show what's installed |
 | `ranch status` | This machine, every device on your network, and every server you've added |
+| `ranch update` | Update every server you've added to the newest ranch (logins untouched) |
 | `ranch join` | At a new Linux server: join your network by scanning a QR code |
 | `ranch add [user@]machine` | From your main computer: set that server up remotely, logins carried over |
 | `ranch pair [user@]machine` | From your main computer: a fresh link to pair that server with your T3 Code app |
