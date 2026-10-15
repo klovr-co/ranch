@@ -80,13 +80,71 @@ carry_codex() {
     || warn "Codex: couldn't copy the sign-in over."
 }
 
-# Claude Code keeps its Mac login in the keychain, so the server signs in itself;
-# the link shows up in this terminal, where it's one click.
+# Claude Code keeps its Mac login in the keychain, so the server signs in itself.
+# The login runs on the server inside tmux; we read its link, open it here, and type the code back.
+# Built to survive a flaky browser: Chrome first, link also on the clipboard, codes from old links
+# refused, real success checked, fresh link on retry.
+
+open_link() {
+  local url="$1" browser="${RANCH_BROWSER:-}"
+  printf '%s' "$url" | pbcopy 2>/dev/null || true
+  if [ -z "$browser" ] && [ -d "/Applications/Google Chrome.app" ]; then browser="Google Chrome"; fi
+  if [ -n "$browser" ]; then open -a "$browser" "$url" 2>/dev/null || open "$url"; else open "$url"; fi
+  info "Opened in ${browser:-your browser}. The link is also on your clipboard if you'd rather paste it elsewhere:"
+  info "$url"
+}
+
+claude_remote_signed_in() {
+  remote '$HOME/.local/bin/claude auth status 2>/dev/null' | grep -q '"loggedIn": *true'
+}
+
 login_claude_remote() {
-  if remote '$HOME/.local/bin/claude auth status 2>/dev/null' | grep -q '"loggedIn": *true'; then
-    ok "Claude Code: already signed in"
-    return
-  fi
-  info "Claude Code: open the link below, approve, then paste the code back here."
-  remote_tty '$HOME/.local/bin/claude auth login' || warn "Claude Code: login skipped. Run 'ranch login' on the server."
+  if claude_remote_signed_in; then ok "Claude Code: already signed in"; return; fi
+  can_prompt || { warn "Claude Code: needs a terminal to paste the code. Run 'ranch add' from Terminal."; return; }
+
+  local try url state code answer
+  for try in 1 2 3; do
+    # Fresh login each attempt; the old link stops working, so no stale codes.
+    url="$(remote 'tmux kill-session -t ranch-claude 2>/dev/null
+      tmux new-session -d -s ranch-claude -x 500 -y 50 "$HOME/.local/bin/claude auth login; sleep 600"
+      for i in 1 2 3 4 5 6 7 8 9 10; do
+        sleep 1
+        u=$(tmux capture-pane -t ranch-claude -p -J | grep -o "https://[^[:space:]]*oauth/authorize[^[:space:]]*" | head -1)
+        [ -n "$u" ] && { echo "$u"; break; }
+      done')"
+    if [ -z "$url" ]; then warn "Claude Code: couldn't start the login on the server."; break; fi
+    state="$(printf '%s' "$url" | sed -n 's/.*[?&]state=\([^&]*\).*/\1/p')"
+
+    info "Claude Code: sign in, click Authorize, then paste the code here."
+    open_link "$url"
+
+    while :; do
+      printf '    Code (or Enter for a new link, s to skip): ' >/dev/tty
+      IFS= read -r code </dev/tty || code=s
+      code="$(printf '%s' "$code" | tr -d '[:space:]')"
+      case "$code" in
+        s|S) remote 'tmux kill-session -t ranch-claude 2>/dev/null' || true
+             warn "Claude Code: skipped. Run 'ranch login' on the server later."; return ;;
+        "") continue 2 ;;
+      esac
+      # The part after # is the link's state; it must match the link we opened.
+      case "$code" in
+        *"#"*) [ "${code##*#}" = "$state" ] || { warn "That code is from an older link. Use the newest tab, or press Enter for a new link."; continue; } ;;
+      esac
+      break
+    done
+
+    printf '%s' "$code" | remote 'tmux send-keys -t ranch-claude -l "$(cat)"; tmux send-keys -t ranch-claude Enter; sleep 5'
+    if claude_remote_signed_in; then
+      remote 'tmux kill-session -t ranch-claude 2>/dev/null' || true
+      ok "Claude Code: signed in"
+      return
+    fi
+    warn "Claude Code: that didn't work (the code may have expired)."
+    printf '    Press Enter for a new link, or s to skip: ' >/dev/tty
+    IFS= read -r answer </dev/tty || answer=s
+    case "$answer" in s|S) break ;; esac
+  done
+  remote 'tmux kill-session -t ranch-claude 2>/dev/null' || true
+  warn "Claude Code: not signed in. Run 'ranch login' on the server, or 'ranch add' again."
 }
