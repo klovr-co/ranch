@@ -25,6 +25,7 @@ export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 . "$ROOT/lib/login.sh"
 . "$ROOT/lib/remote.sh"
 . "$ROOT/lib/t3.sh"
+. "$ROOT/lib/secrets.sh"
 
 usage() {
   cat <<'EOF'
@@ -37,6 +38,10 @@ ranch — add this machine to your ranch
   ranch doctor                Show what's installed
   ranch status                This machine, your network, and every server you've added
   ranch update                Update every server you've added to the newest ranch
+
+  ranch run -- <command>      Run a command with this project's secrets from Infisical (no .env files)
+  ranch secrets connect [user@]machine
+                              From your main computer: give a server its own Infisical login
 
   ranch join                  At a new Linux server: join your network (scan a QR code), nothing else
   ranch add [user@]machine    From your main computer: set that server up remotely, logins carried over
@@ -102,6 +107,13 @@ main() {
       doctor) doctor; exit 0 ;;
       status) detect_os; show_status; exit 0 ;;
       update) detect_os; update_all; exit 0 ;;
+      run) shift; secrets_run "$@" ;;
+      secrets)
+        case "${2:-}" in
+          connect) connect_secrets "${3:-}"; exit 0 ;;
+          check) secrets_check; exit $? ;;
+          *) die "Usage: ranch secrets connect [user@]machine" ;;
+        esac ;;
       join) detect_os; join_network; exit 0 ;;
       add) add_machine "${2:-}"; exit 0 ;;
       pair) [ -n "${2:-}" ] || die "Usage: ranch pair [user@]machine"

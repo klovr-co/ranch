@@ -30,6 +30,8 @@ That's it. Run the same line on the next machine, and the next.
 | `ranch doctor` | Show what's installed |
 | `ranch status` | This machine, every device on your network, and every server you've added |
 | `ranch update` | Update every server you've added to the newest ranch (logins untouched) |
+| `ranch run -- <command>` | Run a command with its secrets from Infisical, e.g. `ranch run -- pnpm dev`. No `.env` files |
+| `ranch secrets connect [user@]machine` | From your main computer: give a server its own limited Infisical login |
 | `ranch join` | At a new Linux server: join your network by scanning a QR code |
 | `ranch add [user@]machine` | From your main computer: set that server up remotely, logins carried over |
 | `ranch pair [user@]machine` | From your main computer: a fresh link to pair that server with your T3 Code app |
@@ -62,10 +64,10 @@ ranch add <machine-name>
 | GitHub | No clicks: your main computer passes its GitHub login over the secure connection |
 | Codex | No clicks: your Codex sign-in is copied over, as Codex recommends for headless machines |
 | Claude Code | One click: the sign-in link opens in your main computer's browser |
-| Infisical | Type your Infisical email, password and 2FA code in your main computer's terminal |
+| Infisical | No clicks: the server gets its own limited Infisical login, created from your main computer. Revoke one server without touching the rest |
 | T3 Code | One paste: the pairing link is copied and the T3 app opened; paste it into Settings → Connections → Add environment |
 
-One QR scan, one click, one sign-in and one paste, instead of copying links and codes by hand.
+One QR scan, one click and one paste, instead of copying links and codes by hand.
 
 > The server signs in as you, with the same accounts as your main computer. That's right for machines you own. Shared or cloud servers should get their own limited logins.
 

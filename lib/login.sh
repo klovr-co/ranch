@@ -75,17 +75,14 @@ login_secrets() {
   st="$($inf login status 2>&1 || true)"
   if ! printf '%s' "$st" | grep -qi 'not authenticated'; then
     ok "Secrets      Infisical $(printf '%s' "$st" | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | head -1)"
+  elif [ -f "$HOME/.config/ranch/infisical.env" ]; then
+    ok "Secrets      Infisical (this server's own login)"
+  elif headless; then
+    warn "Secrets      Infisical not connected (from your main computer: ranch secrets connect $(id -un)@$(hostname))"
   elif [ "${1:-}" = run ]; then
-    if headless; then
-      # No browser here: sign in right in the terminal with email, password and 2FA code.
-      info "→ Infisical: choose your region (US unless you signed up on EU), then your email, password and 2FA code"
-      $inf login --interactive </dev/tty || warn "Infisical login skipped"
-      login_secrets status
-    else
-      info "→ Infisical: choose your region (US unless you picked EU), then sign in in the browser"
-      $inf login </dev/tty || warn "Infisical login skipped"
-      login_secrets status
-    fi
+    info "→ Infisical: choose your region (US unless you picked EU), then sign in in the browser"
+    $inf login </dev/tty || warn "Infisical login skipped"
+    login_secrets status
   else
     warn "Secrets      Infisical not signed in"
   fi

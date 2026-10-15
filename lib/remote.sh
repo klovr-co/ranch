@@ -61,7 +61,7 @@ add_machine() {
   carry_github
   carry_codex
   login_claude_remote
-  login_infisical_remote
+  if has_user_login 2>/dev/null; then connect_secrets "$target"; else warn "Secrets: sign in to Infisical here (ranch login), then run: ranch secrets connect $target"; fi
 
   step "Pairing T3 Code with this computer"
   pair_t3
@@ -156,22 +156,6 @@ login_claude_remote() {
   done
   remote 'tmux kill-session -t ranch-claude 2>/dev/null' || true
   warn "Claude Code: not signed in. Run 'ranch login' on the server, or 'ranch add' again."
-}
-
-# Infisical on a server: no browser there, so sign in with email, password and 2FA code,
-# typed here in this terminal. (Accounts that sign in with GitHub/Google can't do this.)
-login_infisical_remote() {
-  local inf='$HOME/.local/bin/mise exec -- infisical'
-  if ! remote "$inf --version" >/dev/null 2>&1; then info "Infisical isn't installed on the server; skipping."; return; fi
-  if ! remote "$inf login status 2>&1" | grep -qi 'not authenticated'; then ok "Infisical: already signed in"; return; fi
-  can_prompt || { warn "Infisical: needs a terminal. Run 'infisical login --interactive' on the server."; return; }
-  info "Infisical: choose your region, then type your Infisical email, password and 2FA code."
-  remote_tty "$inf login --interactive" </dev/tty || true
-  if remote "$inf login status 2>&1" | grep -qi 'not authenticated'; then
-    warn "Infisical: not signed in. Run 'infisical login --interactive' on the server later."
-  else
-    ok "Infisical: signed in"
-  fi
 }
 
 # --- status: this machine, the network, and every server you've added --------------
