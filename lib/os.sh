@@ -32,31 +32,47 @@ sudo_ready() {
   if { : </dev/tty; } 2>/dev/null; then sudo -v </dev/tty; else sudo -v; fi
 }
 
+# Packages ranch needs that a fresh OS may not have, per package manager.
+base_packages() {
+  case "$OS" in
+    debian) echo "git curl ca-certificates tmux build-essential unzip" ;;
+    fedora) echo "git curl ca-certificates tmux gcc gcc-c++ make unzip" ;;
+    arch)   echo "git curl ca-certificates tmux base-devel unzip" ;;
+  esac
+}
+
+pkg_installed() {
+  case "$OS" in
+    debian) dpkg-query -W -f='${Status}' "$1" 2>/dev/null | grep -q 'install ok installed' ;;
+    fedora) rpm -q "$1" >/dev/null 2>&1 ;;
+    arch)   pacman -Qi "$1" >/dev/null 2>&1 || pacman -Qg "$1" >/dev/null 2>&1 ;;
+  esac
+}
+
 install_base_packages() {
   step "Base packages ($OS_NAME)"
+  if [ "$OS" = macos ]; then
+    xcode-select -p >/dev/null 2>&1 || die "Run: xcode-select --install   then re-run ranch."
+    ok "Xcode command line tools present"
+    return
+  fi
+
+  # Only touch the package manager (and ask for a password) when something is missing.
+  local p missing=""
+  for p in $(base_packages); do pkg_installed "$p" || missing="$missing $p"; done
+  if [ -z "$missing" ]; then
+    ok "all present: $(base_packages)"
+    return
+  fi
+
+  info "Missing:$missing"
+  sudo_ready
+  info "Installing them; this can take a few minutes on a fresh machine…"
+  # shellcheck disable=SC2086
   case "$OS" in
-    macos)
-      xcode-select -p >/dev/null 2>&1 || die "Run: xcode-select --install   then re-run ranch."
-      ok "Xcode command line tools present"
-      ;;
-    debian)
-      sudo_ready
-      info "Installing system packages; this can take a few minutes on a fresh machine…"
-      sudo_cmd apt-get update -qq
-      sudo_cmd apt-get install -y -qq git curl ca-certificates tmux build-essential unzip >/dev/null
-      ok "git curl tmux build-essential"
-      ;;
-    fedora)
-      sudo_ready
-      info "Installing system packages; this can take a few minutes on a fresh machine…"
-      sudo_cmd dnf install -y -q git curl ca-certificates tmux gcc gcc-c++ make unzip >/dev/null
-      ok "git curl tmux gcc make"
-      ;;
-    arch)
-      sudo_ready
-      info "Installing system packages; this can take a few minutes on a fresh machine…"
-      sudo_cmd pacman -Sy --needed --noconfirm git curl ca-certificates tmux base-devel unzip >/dev/null
-      ok "git curl tmux base-devel"
-      ;;
+    debian) sudo_cmd apt-get update -qq && sudo_cmd apt-get install -y -qq $missing >/dev/null ;;
+    fedora) sudo_cmd dnf install -y -q $missing >/dev/null ;;
+    arch)   sudo_cmd pacman -Sy --needed --noconfirm $missing >/dev/null ;;
   esac
+  ok "installed:$missing"
 }
