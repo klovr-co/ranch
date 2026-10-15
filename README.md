@@ -30,6 +30,37 @@ That's it. Run the same line on the next machine, and the next.
 
 Re-run `ranch` any time. It only changes what's different, and keeps itself up to date.
 
+## Adding a server from your main computer *(coming next)*
+
+Signing in on a server with no screen means copying links and codes by hand. Instead, do one step at the server and everything else from your main computer, where links are clickable:
+
+**1. At the new server — one line, one scan**
+
+```bash
+curl -fsSL xian-jun.github.io/ranch | bash -s -- join
+```
+
+This installs only Tailscale and shows a QR code. Scan it with your phone and approve. Nothing to type or copy.
+
+**2. On your main computer — one command**
+
+```bash
+ranch add <machine-name>
+```
+
+`ranch` connects to the server over Tailscale SSH and sets it up remotely, carrying your logins over:
+
+| Login | How it's done |
+|---|---|
+| Tailscale | Already done in step 1 |
+| GitHub | No clicks: your main computer passes its GitHub login over the secure connection |
+| Codex | No clicks: your Codex sign-in is copied over, as Codex recommends for headless machines |
+| Claude Code | One click: the sign-in link opens in your main computer's browser |
+
+One QR scan and one click, instead of four copy-and-paste logins.
+
+> The server signs in as you, with the same accounts as your main computer. That's right for machines you own. Shared or cloud servers should get their own limited logins.
+
 ## Teams
 
 Give everyone on a team the same setup with a team config — a private repo with three things:
