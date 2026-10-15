@@ -8,6 +8,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 . "$ROOT/lib/os.sh"
 . "$ROOT/lib/tools.sh"
 . "$ROOT/lib/teams.sh"
+. "$ROOT/lib/network.sh"
 . "$ROOT/lib/login.sh"
 
 usage() {
@@ -28,9 +29,10 @@ doctor() {
   detect_os
   step "Machine: $OS_NAME ($(uname -m))"
   local t
-  for t in mise git gh node pnpm claude codex tmux tailscale; do
+  for t in mise git gh node pnpm claude codex tmux; do
     if has "$t"; then ok "$t"; else warn "$t missing"; fi
   done
+  if [ -n "$(ts_bin)" ]; then ok "tailscale"; else warn "tailscale missing"; fi
   step "Teams"
   if [ -s "$TEAMS_LIST" ]; then
     while IFS= read -r t; do info "$t"; done < "$TEAMS_LIST"
@@ -60,6 +62,7 @@ main() {
   install_mise
   install_base_tools
   install_agent_clis
+  install_tailscale
 
   local t
   for t in $teams; do remember_team "$t"; done

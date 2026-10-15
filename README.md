@@ -24,6 +24,7 @@ Safe to re-run any time: it only changes what's different.
 
 - [mise](https://mise.jdx.dev) for pinned tool versions, plus `gh` and Node
 - Claude Code and Codex (left alone if already installed)
+- Tailscale, so your machines reach each other privately (Linux machines accept SSH from your devices)
 - Your team's agent rules and tools, scoped to `~/code/<team>/`
 
 ## Team configs
@@ -34,4 +35,4 @@ A team config is a private repo with `setup.toml`, `mise.toml` and `agent/` rule
 
 macOS, Ubuntu, Debian, Fedora. Arch is best effort.
 
-> Work in progress: Tailscale and secret manager support are coming next.
+> Work in progress: secret manager support is coming next.

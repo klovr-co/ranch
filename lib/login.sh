@@ -44,15 +44,7 @@ login_codex() {
   fi
 }
 
-# Tailscale and the secret manager are installed in their own step; until then just report.
-login_tailscale() {
-  if has tailscale; then
-    if tailscale status >/dev/null 2>&1; then ok "Tailscale    connected"; else warn "Tailscale    not connected"; fi
-  else
-    info "· Tailscale    not set up yet"
-  fi
-}
-
+# The secret manager is installed in its own step; until then just report.
 login_secrets() {
   if has infisical; then ok "Infisical    installed"; else info "· Secrets      not set up yet"; fi
 }
@@ -67,7 +59,7 @@ run_logins() {
     mode=status
   fi
   login_github "$mode"
-  login_tailscale
+  login_tailscale "$mode"
   login_secrets
   login_claude "$mode"
   login_codex "$mode"
