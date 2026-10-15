@@ -1,0 +1,5 @@
+# Team config for `setup`. Copy this folder into a private repo, e.g. your-org/setup-config.
+
+name = "your-org"          # used for the team folder: ~/code/your-org
+secrets = "infisical"      # infisical | 1password | bitwarden | doppler | none
+network = "tailscale"

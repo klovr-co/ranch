@@ -1,0 +1,4 @@
+# Tools for every repo under ~/code/<team>/. Repos can pin their own versions in their own mise.toml.
+[tools]
+node = "22"
+pnpm = "9"
