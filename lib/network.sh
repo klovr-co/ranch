@@ -48,9 +48,29 @@ login_tailscale() {
     ok "Tailscale    connected as $("$ts" status --json 2>/dev/null | sed -n 's/.*"HostName": *"\([^"]*\)".*/\1/p' | head -1)"
   elif [ "${1:-}" = run ]; then
     if [ "$OS" = macos ]; then
-      open -a Tailscale
-      info "→ Tailscale: click its icon in the menu bar, allow the VPN, and sign in."
-      info "  Then run 'setup login status' to check."
+      # The app's own sign-in buttons don't always open a browser (seen on macOS 27),
+      # so get the link from the CLI, open it ourselves and wait for the sign-in.
+      pgrep -qf "$TS_MAC_APP" || open -a Tailscale
+      local out url i=0
+      out="$(mktemp)"
+      "$ts" up >"$out" 2>&1 &
+      local pid=$!
+      while [ $i -lt 30 ] && kill -0 "$pid" 2>/dev/null; do
+        url="$(grep -o 'https://login.tailscale.com/[^[:space:]]*' "$out" | head -1)"
+        [ -n "$url" ] && break
+        sleep 1; i=$((i + 1))
+      done
+      if [ -n "${url:-}" ]; then
+        info "→ Tailscale: sign in at $url"
+        info "  (opening it in your browser; if macOS asks to allow a VPN, click Allow)"
+        open "$url"
+        wait "$pid" || warn "Tailscale login didn't finish"
+      else
+        warn "Couldn't get a Tailscale sign-in link. Open the Tailscale app and allow its VPN, then run 'setup login'."
+        kill "$pid" 2>/dev/null || true
+      fi
+      rm -f "$out"
+      login_tailscale status
     else
       info "→ Tailscale: open the link and sign in"
       # --ssh lets your other devices SSH in using your Tailscale login; no keys or passwords.
