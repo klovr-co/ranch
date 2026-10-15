@@ -18,7 +18,7 @@ install_tailscale() {
     macos)
       if ! sudo -n true 2>/dev/null && ! can_prompt; then
         warn "Skipped: installing Tailscale needs your Mac password, and there's no terminal to type it in."
-        warn "Run setup from the Terminal app to finish this step."
+        warn "Run ranch from the Terminal app to finish this step."
         return
       fi
       local pkg
@@ -66,7 +66,7 @@ login_tailscale() {
         open "$url"
         wait "$pid" || warn "Tailscale login didn't finish"
       else
-        warn "Couldn't get a Tailscale sign-in link. Open the Tailscale app and allow its VPN, then run 'setup login'."
+        warn "Couldn't get a Tailscale sign-in link. Open the Tailscale app and allow its VPN, then run 'ranch login'."
         kill "$pid" 2>/dev/null || true
       fi
       rm -f "$out"

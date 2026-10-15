@@ -49,13 +49,13 @@ login_secrets() {
   if has infisical; then ok "Infisical    installed"; else info "· Secrets      not set up yet"; fi
 }
 
-# setup login        → sign in to anything missing
-# setup login status → only report
+# ranch login        → sign in to anything missing
+# ranch login status → only report
 run_logins() {
   local mode="${1:-run}"
   step "Logins"
   if [ "$mode" = run ] && ! can_prompt; then
-    warn "No terminal to ask on; run 'setup login' yourself to sign in."
+    warn "No terminal to ask on; run 'ranch login' yourself to sign in."
     mode=status
   fi
   login_github "$mode"

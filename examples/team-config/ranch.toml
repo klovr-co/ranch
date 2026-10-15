@@ -1,4 +1,4 @@
-# Team config for `setup`. Copy this folder into a private repo, e.g. your-org/setup-config.
+# Team config for `ranch`. Copy this folder into a private repo, e.g. your-org/ranch-config.
 
 name = "your-org"          # used for the team folder: ~/code/your-org
 secrets = "infisical"      # infisical | 1password | bitwarden | doppler | none

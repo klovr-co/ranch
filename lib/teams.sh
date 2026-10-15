@@ -1,9 +1,9 @@
-# Team configs: a (private) repo with setup.toml, mise.toml and agent rules.
+# Team configs: a (private) repo with ranch.toml, mise.toml and agent rules.
 # Each team gets its own folder, ~/code/<team>/, and its rules and tools apply only inside it.
 
-CONFIG_HOME="$HOME/.config/setup"
+CONFIG_HOME="$HOME/.config/ranch"
 TEAMS_LIST="$CONFIG_HOME/teams"
-CODE_HOME="${SETUP_CODE_HOME:-$HOME/code}"
+CODE_HOME="${RANCH_CODE_HOME:-$HOME/code}"
 
 remember_team() {
   mkdir -p "$CONFIG_HOME"
@@ -13,8 +13,8 @@ remember_team() {
 
 ensure_gh_auth() {
   if ! "$MISE" exec -- gh auth status >/dev/null 2>&1; then
-    can_prompt || die "Not signed in to GitHub. Run setup from a terminal, or run 'gh auth login' first."
-    info "Sign in to GitHub so setup can read your team config:"
+    can_prompt || die "Not signed in to GitHub. Run ranch from a terminal, or run 'gh auth login' first."
+    info "Sign in to GitHub so ranch can read your team config:"
     "$MISE" exec -- gh auth login --hostname github.com --git-protocol https --web </dev/tty
   fi
 }
@@ -41,9 +41,9 @@ fetch_team() {
 apply_team() {
   local ref="$1" dir name folder
   dir="$(fetch_team "$ref")"
-  [ -f "$dir/setup.toml" ] || die "$ref has no setup.toml; is it a setup config repo?"
-  name="$(conf_get "$dir/setup.toml" name "${ref%%/*}")"
-  folder="$CODE_HOME/$(conf_get "$dir/setup.toml" folder "$name")"
+  [ -f "$dir/ranch.toml" ] || die "$ref has no ranch.toml; is it a ranch config repo?"
+  name="$(conf_get "$dir/ranch.toml" name "${ref%%/*}")"
+  folder="$CODE_HOME/$(conf_get "$dir/ranch.toml" folder "$name")"
   step "Team: $name → $folder"
   mkdir -p "$folder"
 
@@ -61,7 +61,7 @@ apply_team() {
   fi
 
   local secrets
-  secrets="$(conf_get "$dir/setup.toml" secrets "")"
+  secrets="$(conf_get "$dir/ranch.toml" secrets "")"
   [ -n "$secrets" ] && info "secrets: $secrets (connected in a later step)"
   return 0
 }

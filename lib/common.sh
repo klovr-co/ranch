@@ -45,6 +45,6 @@ link_file() {
     ln -sfn "$src" "$dest"
     ok "linked $(basename "$dest") → $dest"
   else
-    warn "$dest exists and is not managed by setup; left it alone"
+    warn "$dest exists and is not managed by ranch; left it alone"
   fi
 }

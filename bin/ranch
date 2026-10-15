@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# ranch — add this machine to your ranch: same tools, agent rules and logins as every other machine.
+# Safe to re-run: it only changes what's different.
+set -euo pipefail
+
+# Resolve symlinks (~/.local/bin/ranch → checkout) without readlink -f, which older macOS lacks.
+src="${BASH_SOURCE[0]}"
+while [ -L "$src" ]; do
+  dir="$(cd "$(dirname "$src")" && pwd)"
+  src="$(readlink "$src")"
+  case "$src" in /*) ;; *) src="$dir/$src" ;; esac
+done
+ROOT="$(cd "$(dirname "$src")/.." && pwd)"
+unset src dir
+
+# shellcheck source=../lib/common.sh
+. "$ROOT/lib/common.sh"
+. "$ROOT/lib/os.sh"
+. "$ROOT/lib/tools.sh"
+. "$ROOT/lib/teams.sh"
+. "$ROOT/lib/network.sh"
+. "$ROOT/lib/login.sh"
+
+usage() {
+  cat <<'EOF'
+ranch — add this machine to your ranch
+
+  ranch                       Install or update everything (re-uses teams added before)
+  ranch --team owner/repo     Add a team config, then install or update
+  ranch login                 Sign in to anything missing (GitHub, Tailscale, Claude, Codex)
+  ranch login status          Only show what's signed in
+  ranch doctor                Show what's installed
+
+Safe to re-run any time.
+EOF
+}
+
+# The installed copy keeps itself current; a dev checkout is left alone.
+self_update() {
+  [ "$ROOT" = "$HOME/.local/share/ranch" ] && [ -d "$ROOT/.git" ] || return 0
+  [ -z "${RANCH_UPDATED:-}" ] || return 0
+  local before after
+  before="$(git -C "$ROOT" rev-parse HEAD)"
+  git -C "$ROOT" pull --ff-only --quiet 2>/dev/null || { warn "Couldn't update ranch; using the current version"; return 0; }
+  after="$(git -C "$ROOT" rev-parse HEAD)"
+  if [ "$before" != "$after" ]; then
+    info "ranch updated; restarting"
+    RANCH_UPDATED=1 exec bash "$ROOT/bin/ranch" "$@"
+  fi
+}
+
+# Put `ranch` on PATH so it can be run from anywhere.
+link_command() {
+  mkdir -p "$HOME/.local/bin"
+  ln -sfn "$ROOT/bin/ranch" "$HOME/.local/bin/ranch"
+}
+
+doctor() {
+  detect_os
+  step "Machine: $OS_NAME ($(uname -m))"
+  local t
+  for t in mise git gh node pnpm claude codex tmux; do
+    if has "$t"; then ok "$t"; else warn "$t missing"; fi
+  done
+  if [ -n "$(ts_bin)" ]; then ok "tailscale"; else warn "tailscale missing"; fi
+  step "Teams"
+  if [ -s "$TEAMS_LIST" ]; then
+    while IFS= read -r t; do info "$t"; done < "$TEAMS_LIST"
+  else
+    info "none (add one with: ranch --team owner/repo)"
+  fi
+}
+
+main() {
+  self_update "$@"
+  local teams=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -h|--help|help) usage; exit 0 ;;
+      doctor) doctor; exit 0 ;;
+      login)
+        detect_os
+        if [ "${2:-}" = status ]; then run_logins status; else run_logins run; fi
+        exit 0 ;;
+      --team) [ $# -ge 2 ] || die "--team needs owner/repo"; teams="$teams $2"; shift 2 ;;
+      --team=*) teams="$teams ${1#--team=}"; shift ;;
+      *) die "Unknown argument: $1 (try --help)" ;;
+    esac
+  done
+
+  detect_os
+  install_base_packages
+  install_mise
+  install_base_tools
+  install_agent_clis
+  install_tailscale
+  link_command
+
+  local t
+  for t in $teams; do remember_team "$t"; done
+  if [ -s "$TEAMS_LIST" ]; then
+    while IFS= read -r t; do [ -n "$t" ] && apply_team "$t"; done < "$TEAMS_LIST"
+  fi
+
+  run_logins run
+
+  step "Done"
+  info "This machine is on the ranch. Open a new terminal, then run 'ranch doctor' any time."
+}
+
+main "$@"
