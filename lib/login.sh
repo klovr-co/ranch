@@ -86,4 +86,5 @@ run_logins() {
   login_secrets
   login_claude "$mode"
   login_codex "$mode"
+  login_t3
 }

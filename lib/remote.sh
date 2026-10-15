@@ -26,6 +26,10 @@ join_network() {
   fi
   # Let your own devices SSH in with your Tailscale login; no keys or passwords.
   sudo "$ts" set --ssh
+  # Let this user publish T3 privately on Tailscale without sudo.
+  sudo "$ts" set --operator="$(id -un)"
+  # Keep background services (T3) running when nobody is logged in.
+  sudo loginctl enable-linger "$(id -un)" 2>/dev/null || true
   ok "connected as $(ts_hostname); SSH from your devices enabled"
 
   step "Next, on your main computer"
@@ -42,6 +46,7 @@ add_machine() {
   [ -n "$target" ] || die "Usage: ranch add [user@]machine   (the name 'ranch join' printed)"
   case "$target" in *@*) ;; *) target="$(id -un)@$target" ;; esac
   RANCH_TARGET="$target"
+  remember_machine "$target"
 
   step "Connecting to $target"
   info "If Tailscale asks you to confirm, a link appears here; open it and approve."
@@ -56,6 +61,9 @@ add_machine() {
   carry_github
   carry_codex
   login_claude_remote
+
+  step "Pairing T3 Code with this computer"
+  pair_t3
 
   step "$target"
   remote '$HOME/.local/bin/ranch login status' || true
@@ -147,4 +155,43 @@ login_claude_remote() {
   done
   remote 'tmux kill-session -t ranch-claude 2>/dev/null' || true
   warn "Claude Code: not signed in. Run 'ranch login' on the server, or 'ranch add' again."
+}
+
+# --- status: this machine, the network, and every server you've added --------------
+
+MACHINES_LIST="$HOME/.config/ranch/machines"
+
+remember_machine() {
+  mkdir -p "$(dirname "$MACHINES_LIST")"
+  touch "$MACHINES_LIST"
+  grep -qxF "$1" "$MACHINES_LIST" || echo "$1" >> "$MACHINES_LIST"
+}
+
+show_status() {
+  run_logins status
+
+  step "Your network (Tailscale)"
+  local ts
+  ts="$(ts_bin)"
+  if [ -z "$ts" ] || ! "$ts" status >/dev/null 2>&1; then
+    warn "Not connected to Tailscale"
+  else
+    # Columns: ip, name, user, os, state ("-" means connected; "offline" otherwise).
+    "$ts" status 2>/dev/null | awk '$1 ~ /^100\./ {
+      state = ($5 == "offline") ? "offline" : "online"
+      mark = (state == "online") ? "\033[32m●\033[0m" : "\033[2m○\033[0m"
+      printf "    %s %-22s %-8s %s\n", mark, $2, $4, state }'
+  fi
+
+  [ -s "$MACHINES_LIST" ] || return 0
+  local target
+  while IFS= read -r target; do
+    [ -n "$target" ] || continue
+    step "$target"
+    if ssh -o BatchMode=yes -o ConnectTimeout=8 "$target" '$HOME/.local/bin/ranch login status' 2>/dev/null \
+        | grep -v '==> Logins' | sed '/^[[:space:]]*$/d'; then :
+    else
+      warn "unreachable (offline, or Tailscale SSH needs approval: try 'ssh $target')"
+    fi
+  done < "$MACHINES_LIST"
 }

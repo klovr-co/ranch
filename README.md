@@ -17,6 +17,7 @@ That's it. Run the same line on the next machine, and the next.
 - **Your agent rules** — the same `CLAUDE.md` / `AGENTS.md` everywhere, so agents behave the same on every machine
 - **A private network** — [Tailscale](https://tailscale.com) links your machines; nothing is exposed to the internet, and Linux machines accept SSH from your own devices only
 - **Guided logins** — every sign-in is a link and a code, so a server with no screen is approved from your phone
+- **[T3 Code](https://t3.codes) on servers** — running in the background and reachable only from your own devices, so you drive every server's agents from the T3 app on your main computer or phone (skip with `RANCH_T3=0`)
 
 ## Commands
 
@@ -27,8 +28,10 @@ That's it. Run the same line on the next machine, and the next.
 | `ranch login` | Sign in to anything missing (GitHub, Tailscale, Claude Code, Codex) |
 | `ranch login status` | Show what's signed in |
 | `ranch doctor` | Show what's installed |
+| `ranch status` | This machine, every device on your network, and every server you've added |
 | `ranch join` | At a new Linux server: join your network by scanning a QR code |
 | `ranch add [user@]machine` | From your main computer: set that server up remotely, logins carried over |
+| `ranch pair [user@]machine` | From your main computer: a fresh link to pair that server with your T3 Code app |
 
 Re-run `ranch` any time. It only changes what's different, and keeps itself up to date.
 
@@ -58,8 +61,9 @@ ranch add <machine-name>
 | GitHub | No clicks: your main computer passes its GitHub login over the secure connection |
 | Codex | No clicks: your Codex sign-in is copied over, as Codex recommends for headless machines |
 | Claude Code | One click: the sign-in link opens in your main computer's browser |
+| T3 Code | One paste: the pairing link is copied and the T3 app opened; paste it into Settings → Connections → Add environment |
 
-One QR scan and one click, instead of four copy-and-paste logins.
+One QR scan, one click and one paste, instead of copying links and codes by hand.
 
 > The server signs in as you, with the same accounts as your main computer. That's right for machines you own. Shared or cloud servers should get their own limited logins.
 

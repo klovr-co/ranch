@@ -24,6 +24,7 @@ export PATH="$HOME/.local/bin:$HOME/.local/share/mise/shims:$PATH"
 . "$ROOT/lib/network.sh"
 . "$ROOT/lib/login.sh"
 . "$ROOT/lib/remote.sh"
+. "$ROOT/lib/t3.sh"
 
 usage() {
   cat <<'EOF'
@@ -34,9 +35,11 @@ ranch — add this machine to your ranch
   ranch login                 Sign in to anything missing (GitHub, Tailscale, Claude, Codex)
   ranch login status          Only show what's signed in
   ranch doctor                Show what's installed
+  ranch status                This machine, your network, and every server you've added
 
   ranch join                  At a new Linux server: join your network (scan a QR code), nothing else
   ranch add [user@]machine    From your main computer: set that server up remotely, logins carried over
+  ranch pair [user@]machine   From your main computer: a fresh link to pair that server with your T3 app
 
 Safe to re-run any time.
 EOF
@@ -80,6 +83,7 @@ doctor() {
     if has "$t"; then ok "$t"; else warn "$t missing"; fi
   done
   if [ -n "$(ts_bin)" ]; then ok "tailscale"; else warn "tailscale missing"; fi
+  if [ "$OS" != macos ]; then if has t3; then ok "t3"; else warn "t3 missing"; fi; fi
   step "Teams"
   if [ -s "$TEAMS_LIST" ]; then
     while IFS= read -r t; do info "$t"; done < "$TEAMS_LIST"
@@ -95,8 +99,12 @@ main() {
     case "$1" in
       -h|--help|help) usage; exit 0 ;;
       doctor) doctor; exit 0 ;;
+      status) detect_os; show_status; exit 0 ;;
       join) detect_os; join_network; exit 0 ;;
       add) add_machine "${2:-}"; exit 0 ;;
+      pair) [ -n "${2:-}" ] || die "Usage: ranch pair [user@]machine"
+            RANCH_TARGET="$2"; case "$2" in *@*) ;; *) RANCH_TARGET="$(id -un)@$2" ;; esac
+            pair_t3; exit 0 ;;
       --no-login) logins=0; shift ;;
       login)
         detect_os
@@ -115,6 +123,7 @@ main() {
   install_base_tools
   install_agent_clis
   install_tailscale
+  install_t3
   link_command
 
   local t
