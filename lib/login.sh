@@ -77,8 +77,10 @@ login_secrets() {
     ok "Secrets      Infisical $(printf '%s' "$st" | grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+' | head -1)"
   elif [ "${1:-}" = run ]; then
     if headless; then
-      info "→ Infisical: on a server, sign in from your main computer with 'ranch add', or here with:"
-      info "  infisical login --interactive   (needs an Infisical password; GitHub/Google sign-in won't work here)"
+      # No browser here: sign in right in the terminal with email, password and 2FA code.
+      info "→ Infisical: choose your region (US unless you signed up on EU), then your email, password and 2FA code"
+      $inf login --interactive </dev/tty || warn "Infisical login skipped"
+      login_secrets status
     else
       info "→ Infisical: choose your region (US unless you picked EU), then sign in in the browser"
       $inf login </dev/tty || warn "Infisical login skipped"
