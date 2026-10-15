@@ -62,9 +62,10 @@ ranch add <machine-name>
 | GitHub | No clicks: your main computer passes its GitHub login over the secure connection |
 | Codex | No clicks: your Codex sign-in is copied over, as Codex recommends for headless machines |
 | Claude Code | One click: the sign-in link opens in your main computer's browser |
+| Infisical | Type your Infisical email, password and 2FA code in your main computer's terminal |
 | T3 Code | One paste: the pairing link is copied and the T3 app opened; paste it into Settings → Connections → Add environment |
 
-One QR scan, one click and one paste, instead of copying links and codes by hand.
+One QR scan, one click, one sign-in and one paste, instead of copying links and codes by hand.
 
 > The server signs in as you, with the same accounts as your main computer. That's right for machines you own. Shared or cloud servers should get their own limited logins.
 
@@ -92,7 +93,7 @@ macOS, Ubuntu, Debian and Fedora. Arch is best effort.
 
 ## Roadmap
 
-- Secrets from your secret manager (Infisical first), injected at runtime — no `.env` files
+- Secrets per repo from Infisical, injected at runtime — no `.env` files (Infisical is installed and signed in already)
 - One-command cloud servers (DigitalOcean, Google Cloud)
 - Self-hosted CI runners
 - Agents that pick up GitHub issues on their own
