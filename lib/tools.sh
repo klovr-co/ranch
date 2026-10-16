@@ -31,6 +31,12 @@ install_base_tools() {
   # Secret manager CLI: secrets are injected when code runs (infisical run -- …), never saved to .env files.
   "$MISE" --quiet use --global --yes infisical@latest >/dev/null
   ok "infisical $("$MISE" exec -- infisical --version 2>/dev/null | awk '{print $3}')"
+  # Google Cloud CLI (gcloud), for Cloud Run and other Google Cloud work. Sign in later with: gcloud auth login
+  if "$MISE" --quiet use --global --yes gcloud@latest >/dev/null 2>&1; then
+    ok "gcloud $("$MISE" exec -- gcloud --version 2>/dev/null | head -1 | awk '{print $4}')"
+  else
+    warn "gcloud install failed; skipping"
+  fi
   # Node is needed for the agent CLIs. Keep any Node the user already has on PATH.
   if ! has node; then
     "$MISE" --quiet use --global --yes node@lts >/dev/null
