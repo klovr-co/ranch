@@ -78,7 +78,7 @@ login_secrets() {
   elif [ -f "$HOME/.config/ranch/infisical.env" ]; then
     ok "Secrets      Infisical (this server's own login)"
   elif headless; then
-    warn "Secrets      Infisical not connected (from your main computer: ranch secrets connect $(id -un)@$(hostname))"
+    warn "Secrets      Infisical not signed in (run: infisical login)"
   elif [ "${1:-}" = run ]; then
     info "→ Infisical: choose your region (US unless you picked EU), then sign in in the browser"
     $inf login </dev/tty || warn "Infisical login skipped"

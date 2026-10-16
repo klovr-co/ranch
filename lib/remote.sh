@@ -61,7 +61,7 @@ add_machine() {
   carry_github
   carry_codex
   login_claude_remote
-  if has_user_login 2>/dev/null; then connect_secrets "$target"; else warn "Secrets: sign in to Infisical here (ranch login), then run: ranch secrets connect $target"; fi
+  info "Infisical: SSH in once and run 'infisical login' there (nothing is created or changed for you)."
 
   step "Pairing T3 Code with this computer"
   pair_t3
