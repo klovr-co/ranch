@@ -215,7 +215,8 @@ grant_servers() {
     api GET "/v1/auth/universal-auth/identities/$iid/client-secrets" | python3 -c 'import sys,json
 try: d=json.load(sys.stdin)
 except Exception: sys.exit(1)
-sys.exit(0 if any(str(s.get("description","")).startswith("ranch: ") for s in d.get("clientSecrets",[])) else 1)' || continue
+rows=d.get("clientSecretData", d.get("clientSecrets", []))
+sys.exit(0 if any(str(s.get("description","")).startswith("ranch: ") and not s.get("isClientSecretRevoked") for s in rows) else 1)' || continue
     info "$name"
     grant_projects "$org" "$iid"
     n=$((n + 1))
