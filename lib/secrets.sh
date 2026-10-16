@@ -123,13 +123,33 @@ secrets_check() {
   has_user_login
 }
 
+# A machine login (a server) can't read the project from .infisical.yaml; infisical wants --projectId.
+# Find the repo's link file (this folder or any above) and print its project id.
+project_id_here() {
+  local d="$PWD" f
+  while [ -n "$d" ]; do
+    f="$d/.infisical.yaml"
+    if [ -f "$f" ]; then
+      awk '/^[[:space:]]*project-id:/ { sub(/^[^:]*:[[:space:]]*/, ""); gsub(/["'"'"'[:space:]]/, ""); print; exit }' "$f"
+      return 0
+    fi
+    [ "$d" = "/" ] && break
+    d="$(dirname "$d")"
+  done
+}
+
 # ranch run [--env dev] [--projectId ID] -- command…   (the project comes from .infisical.yaml if present)
 secrets_run() {
-  [ "${1:-}" != "--" ] || shift
+  # Keep the leading "--": without it infisical reads a command's own flags (like sh -c) as its own.
   if has_server_login; then
     local t
     t="$(server_token)"
     case "$t" in eyJ*) ;; *) die "This machine's Infisical login failed. From your main computer: ranch secrets connect $(id -un)@$(hostname)" ;; esac
+    local pid=""
+    case " $* " in *" --projectId"*) ;; *) pid="$(project_id_here)" ;; esac
+    if [ -n "$pid" ]; then
+      INFISICAL_TOKEN="$t" exec "$MISE" exec -- infisical run --projectId "$pid" "$@"
+    fi
     INFISICAL_TOKEN="$t" exec "$MISE" exec -- infisical run "$@"
   elif has_user_login; then
     exec "$MISE" exec -- infisical run "$@"
@@ -146,7 +166,13 @@ secrets_inf() {
   if has_server_login; then
     t="$(server_token)"
     case "$t" in eyJ*) ;; *) die "This machine's Infisical login failed. From your main computer: ranch secrets connect $(id -un)@$(hostname)" ;; esac
-    INFISICAL_TOKEN="$t" inf "$@"
+    local pid=""
+    case " $* " in *" --projectId"*) ;; *) pid="$(project_id_here)" ;; esac
+    if [ -n "$pid" ]; then
+      INFISICAL_TOKEN="$t" inf "$1" --projectId "$pid" "${@:2}"
+    else
+      INFISICAL_TOKEN="$t" inf "$@"
+    fi
   elif has_user_login; then
     inf "$@"
   else
