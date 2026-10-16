@@ -1,20 +1,26 @@
 # T3 Code: servers run it in the background; your main computer's T3 app controls them over Tailscale.
-# Skip it with RANCH_T3=0.
+# Skip it with RANCH_T3=0. Pick the release train with RANCH_T3_CHANNEL=stable|nightly;
+# once a server is on nightly it stays there.
 
 t3_wanted() { [ "${RANCH_T3:-1}" != 0 ]; }
+
+t3_channel() {
+  if [ -n "${RANCH_T3_CHANNEL:-}" ]; then echo "$RANCH_T3_CHANNEL"
+  elif t3 --version 2>/dev/null | grep -q nightly; then echo nightly
+  else echo stable; fi
+}
 
 # Servers (Linux) run T3. On a Mac you use the T3 Code app, so there's nothing to install.
 install_t3() {
   t3_wanted || return 0
   [ "$OS" != macos ] || return 0
   step "T3 Code (control agents from your other devices)"
-  if has t3; then
-    t3 update >/dev/null 2>&1 || true
-    ok "t3 $(t3 --version 2>/dev/null | awk '{print $2}')"
-  else
-    curl -fsSL https://t3.codes/install.sh | sh >/dev/null 2>&1 || { warn "T3 install failed; skipping"; return 0; }
-    ok "installed t3"
-  fi
+  # The installer follows the chosen train and also updates an existing install.
+  local channel
+  channel="$(t3_channel)"
+  curl -fsSL https://t3.codes/install.sh | T3CODE_CHANNEL="$channel" sh >/dev/null 2>&1 \
+    || { has t3 || { warn "T3 install failed; skipping"; return 0; }; warn "T3 update failed; keeping the current version"; }
+  ok "t3 $(t3 --version 2>/dev/null | awk '{print $2}') ($channel)"
 
   # Background services don't load your shell, so tell T3 where Claude Code and mise tools (Codex) live.
   local dropin="$HOME/.config/systemd/user/t3code.service.d"
@@ -22,12 +28,9 @@ install_t3() {
   printf '[Service]\n# Added by ranch: let T3 find Claude Code (~/.local/bin) and mise tools like Codex.\nEnvironment=PATH=%s/.local/bin:%s/.local/share/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n' \
     "$HOME" "$HOME" > "$dropin/ranch-path.conf"
 
-  if systemctl --user is-active --quiet t3code 2>/dev/null; then
-    systemctl --user daemon-reload && systemctl --user restart t3code
-  else
-    t3 service install >/dev/null 2>&1 || { warn "Couldn't start T3 in the background"; return 0; }
-    systemctl --user daemon-reload && systemctl --user restart t3code
-  fi
+  # Re-installing the service points it at the version just installed.
+  t3 service install >/dev/null 2>&1 || { warn "Couldn't start T3 in the background"; return 0; }
+  systemctl --user daemon-reload && systemctl --user restart t3code
   if systemctl --user is-active --quiet t3code; then ok "T3 running in the background"; else warn "T3 service isn't running"; fi
 }
 

@@ -17,7 +17,7 @@ That's it. Run the same line on the next machine, and the next.
 - **Your agent rules** — the same `CLAUDE.md` / `AGENTS.md` everywhere, so agents behave the same on every machine
 - **A private network** — [Tailscale](https://tailscale.com) links your machines; nothing is exposed to the internet, and Linux machines accept SSH from your own devices only
 - **Guided logins** — every sign-in is a link and a code, so a server with no screen is approved from your phone
-- **[T3 Code](https://t3.codes) on servers** — running in the background and reachable only from your own devices, so you drive every server's agents from the T3 app on your main computer or phone (skip with `RANCH_T3=0`)
+- **[T3 Code](https://t3.codes) on servers** — running in the background and reachable only from your own devices, so you drive every server's agents from the T3 app on your main computer or phone (skip with `RANCH_T3=0`; nightly builds with `RANCH_T3_CHANNEL=nightly`)
 
 ## Commands
 
