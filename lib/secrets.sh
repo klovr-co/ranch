@@ -84,10 +84,25 @@ for m in json.load(sys.stdin).get("identityMemberships",[]):
 
   if remote '$HOME/.local/bin/ranch secrets check' >/dev/null 2>&1; then
     ok "$name can sign in to Infisical"
+    # Only now that the new key is proven, retire the older ones so a server never keeps spare working keys.
+    revoke_old_keys "$iid" "$name"
   else
     warn "$name couldn't sign in with its new key; run 'ranch secrets connect $target' again."
   fi
   INF_TOKEN=""
+}
+
+# Revoke every key ranch made for this server except the newest. Safe to run any time.
+revoke_old_keys() {
+  local iid="$1" name="$2" n
+  n="$(api GET "/v1/auth/universal-auth/identities/$iid/client-secrets" | NAME="$name" python3 -c 'import sys,json,os
+d=json.load(sys.stdin); rows=d.get("clientSecretData", d.get("clientSecrets", []))
+mine=sorted((r for r in rows if r.get("description")=="ranch: "+os.environ["NAME"] and not r.get("isClientSecretRevoked")), key=lambda r: r.get("createdAt",""))
+for r in mine[:-1]: print(r["id"])' | while read -r sid; do
+      [ -n "$sid" ] || continue
+      api POST "/v1/auth/universal-auth/identities/$iid/client-secrets/$sid/revoke" '{}' >/dev/null && echo x
+    done | wc -l | tr -d ' ')"
+  if [ "${n:-0}" -gt 0 ]; then ok "retired $n older key(s) for $name"; fi
 }
 
 # Read access to every project in the organization. Re-run `ranch secrets connect` after adding projects.
