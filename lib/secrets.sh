@@ -211,6 +211,35 @@ sync_secrets() {
   return "$rc"
 }
 
+# ranch secrets import <env> --from-convex DEPLOYMENT | --from-file PATH | --from-cloudrun SERVICE  [options]
+# First-time load of a repo's secrets into an Infisical environment. One way: source -> Infisical.
+# Never deletes, never prints a value, keeps existing values unless --overwrite. Needs your own login
+# (servers only have read access).
+import_secrets() {
+  local envname="${1:-}"
+  [ -n "$envname" ] && [ "${envname#-}" = "$envname" ] || die "Usage: ranch secrets import <env> --from-convex DEPLOYMENT | --from-file PATH | --from-cloudrun SERVICE   (env is dev, staging or prod)"
+  shift
+  has python3 || die "ranch secrets import needs python3."
+  has_user_login || die "Importing writes to Infisical, so it needs your own sign-in on this computer: ranch login"
+  local root; root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Run this inside the repo."
+  [ -f "$root/.infisical.yaml" ] || die "This repo isn't linked to an Infisical project yet. Run 'infisical init' in $root first."
+  local tmp rc=0; tmp="$(umask 077; mktemp -d "${TMPDIR:-/tmp}/ranch-import.XXXXXX")"
+  ( cd "$root" && inf export --env="$envname" --format=json --silent > "$tmp/export.json" ) \
+    || { rm -rf "$tmp"; die "Couldn't read the $envname environment from Infisical (does it exist in the project?)."; }
+  python3 -I "$ROOT/lib/secrets_import.py" "$envname" "$tmp/export.json" "$tmp/apply.yaml" --root "$root" "$@" || rc=$?
+  if [ "$rc" -eq 10 ]; then
+    if ( cd "$root" && inf secrets set --env="$envname" --file "$tmp/apply.yaml" --silent >/dev/null ); then
+      ok "loaded into Infisical $envname. Check: ranch secrets status $envname (if this repo pushes to Convex)"
+      rc=0
+    else
+      warn "Infisical rejected the load; nothing was changed that you need to undo."
+      rc=1
+    fi
+  fi
+  rm -rf "$tmp"
+  return "$rc"
+}
+
 # ranch secrets grant [machine]   (from your main computer)
 # Give servers you already connected read access to projects created since. Doesn't touch their keys.
 grant_servers() {

@@ -44,6 +44,8 @@ ranch — add this machine to your ranch
                               From your main computer: give a server its own Infisical login
   ranch secrets grant [machine]
                               From your main computer: let connected servers see projects added since
+  ranch secrets import <env> --from-convex DEPLOYMENT | --from-file PATH | --from-cloudrun SERVICE
+                              First time: load this repo's secrets into Infisical (shows names only, asks first)
   ranch secrets push <env> [--to DEPLOYMENT] [--yes]
                               Copy this repo's Infisical secrets (dev or prod) to its Convex deployment
   ranch secrets status <env>  Same, but only show what differs (exit 1 if anything does)
@@ -118,8 +120,9 @@ main() {
           connect) connect_secrets "${3:-}"; exit 0 ;;
           check) secrets_check; exit $? ;;
           grant) grant_servers "${3:-}"; exit 0 ;;
+          import) import_secrets "${@:3}"; exit $? ;;
           push|status) sync_secrets "$2" "${3:-}" "${@:4}"; exit $? ;;
-          *) die "Usage: ranch secrets connect|grant|push|status (try --help)" ;;
+          *) die "Usage: ranch secrets connect|grant|import|push|status (try --help)" ;;
         esac ;;
       join) detect_os; join_network; exit 0 ;;
       add) add_machine "${2:-}"; exit 0 ;;
