@@ -44,9 +44,9 @@ ranch — add this machine to your ranch
                               From your main computer: give a server its own Infisical login
   ranch secrets grant [machine]
                               From your main computer: let connected servers see projects added since
-  ranch secrets import <env> --from-convex DEPLOYMENT | --from-file PATH | --from-cloudrun SERVICE
+  ranch secrets import <env> --from-convex DEPLOYMENT | --from-file PATH | --from-cloudrun SERVICE [--path /folder]
                               First time: load this repo's secrets into Infisical (shows names only, asks first)
-  ranch secrets push <env> [--to DEPLOYMENT] [--yes]
+  ranch secrets push <env> [--to DEPLOYMENT] [--path /folder] [--yes]
                               Copy this repo's Infisical secrets (dev or prod) to its Convex deployment
   ranch secrets status <env>  Same, but only show what differs (exit 1 if anything does)
 

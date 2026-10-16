@@ -195,6 +195,21 @@ secrets_inf() {
   fi
 }
 
+# Which Infisical folder a command reads and writes: --path, else `path:` in .ranch/secrets.yaml, else the root.
+# A repo with one app keeps everything in the root; a repo with several apps gives each its own folder (/backend, /web).
+secrets_path() {   # secrets_path ROOT [args…]
+  local root="$1" p=""; shift
+  while [ $# -gt 0 ]; do
+    case "$1" in --path) p="${2:-}"; break ;; --path=*) p="${1#--path=}"; break ;; esac
+    shift
+  done
+  if [ -z "$p" ] && [ -f "$root/.ranch/secrets.yaml" ]; then
+    p="$(awk '/^path:/ { sub(/^path:[[:space:]]*/, ""); gsub(/["'"'"'[:space:]]/, ""); print; exit }' "$root/.ranch/secrets.yaml")"
+  fi
+  p="${p:-/}"
+  case "$p" in /*) printf '%s' "$p" ;; *) die "--path must start with / (for example /backend), not '$p'." ;; esac
+}
+
 # ranch secrets push|status <env> [--to DEPLOYMENT] [--yes]   (run inside the repo)
 # One way: Infisical -> Convex. Reads .ranch/secrets.yaml. Never deletes, never prints a value.
 sync_secrets() {
@@ -204,8 +219,9 @@ sync_secrets() {
   has python3 || die "ranch secrets $mode needs python3."
   local root; root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Run this inside the repo."
   local tmp rc=0; tmp="$(umask 077; mktemp -d "${TMPDIR:-/tmp}/ranch-sync.XXXXXX")"
-  ( cd "$root" && secrets_inf export --env="$envname" --format=json --silent > "$tmp/export.json" ) \
-    || { rm -rf "$tmp"; die "Couldn't read the $envname secrets from Infisical (is this repo linked? .infisical.yaml)."; }
+  local spath; spath="$(secrets_path "$root" "$@")" || { rm -rf "$tmp"; exit 1; }
+  ( cd "$root" && secrets_inf export --env="$envname" --path "$spath" --format=json --silent > "$tmp/export.json" ) \
+    || { rm -rf "$tmp"; die "Couldn't read the $envname secrets in folder $spath from Infisical (is this repo linked? .infisical.yaml)."; }
   ( cd "$root" && python3 -I "$ROOT/lib/secrets_sync.py" "$mode" "$envname" "$tmp/export.json" "$@" ) || rc=$?
   rm -rf "$tmp"
   return "$rc"
@@ -224,12 +240,13 @@ import_secrets() {
   local root; root="$(git rev-parse --show-toplevel 2>/dev/null)" || die "Run this inside the repo."
   [ -f "$root/.infisical.yaml" ] || die "This repo isn't linked to an Infisical project yet. Run 'infisical init' in $root first."
   local tmp rc=0; tmp="$(umask 077; mktemp -d "${TMPDIR:-/tmp}/ranch-import.XXXXXX")"
-  ( cd "$root" && inf export --env="$envname" --format=json --silent > "$tmp/export.json" ) \
-    || { rm -rf "$tmp"; die "Couldn't read the $envname environment from Infisical (does it exist in the project?)."; }
+  local ipath; ipath="$(secrets_path "$root" "$@")" || { rm -rf "$tmp"; exit 1; }
+  ( cd "$root" && inf export --env="$envname" --path "$ipath" --format=json --silent > "$tmp/export.json" ) \
+    || { rm -rf "$tmp"; die "Couldn't read the $envname environment (folder $ipath) from Infisical. Does the folder exist in the project?"; }
   python3 -I "$ROOT/lib/secrets_import.py" "$envname" "$tmp/export.json" "$tmp/apply.yaml" --root "$root" "$@" || rc=$?
   if [ "$rc" -eq 10 ]; then
-    if ( cd "$root" && inf secrets set --env="$envname" --file "$tmp/apply.yaml" --silent >/dev/null ); then
-      ok "loaded into Infisical $envname. Check: ranch secrets status $envname (if this repo pushes to Convex)"
+    if ( cd "$root" && inf secrets set --env="$envname" --path "$ipath" --file "$tmp/apply.yaml" --silent >/dev/null ); then
+      ok "loaded into Infisical $envname ($ipath). Check: ranch secrets status $envname (if this repo pushes to Convex)"
       rc=0
     else
       warn "Infisical rejected the load; nothing was changed that you need to undo."

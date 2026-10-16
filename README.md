@@ -34,6 +34,7 @@ That's it. Run the same line on the next machine, and the next.
 | `ranch secrets connect [user@]machine` | From your main computer: give a server its own limited Infisical login |
 | `ranch secrets grant [machine]` | From your main computer: let servers you already connected see projects added since, without new keys |
 | `ranch secrets import <env> --from-convex DEPLOYMENT` (or `--from-file PATH`, or `--from-cloudrun SERVICE --project P --region R`) | First time in a repo: load its existing secrets into that Infisical environment. Shows names only, asks first, keeps existing values unless `--overwrite`, never deletes. Needs your own login |
+| `--path /folder` (on import, push, status) | Which Infisical folder to use. Default: `path:` in `.ranch/secrets.yaml`, else the root. One-app repos need nothing; repos with several apps use `/backend`, `/web` and so on |
 | `ranch secrets push <env>` | In a repo with `.ranch/secrets.yaml`: copy that Infisical environment to its Convex deployment (shows names only, asks first, never deletes) |
 | `ranch secrets status <env>` | Same check without changing anything; exits 1 if the two differ |
 | `ranch join` | At a new Linux server: join your network by scanning a QR code |
