@@ -75,7 +75,7 @@ carry_github() {
   local token
   token="$("$MISE" exec -- gh auth token 2>/dev/null || true)"
   if [ -z "$token" ]; then warn "GitHub: not signed in here, so nothing to carry over. Run 'ranch login' on the server."; return; fi
-  printf '%s\n' "$token" | remote '$HOME/.local/bin/mise exec -- gh auth login --hostname github.com --git-protocol https --with-token && $HOME/.local/bin/mise exec -- gh auth setup-git' \
+  printf '%s\n' "$token" | remote '$HOME/.local/bin/mise exec -- gh auth login --hostname github.com --git-protocol https --with-token && $HOME/.local/bin/mise exec -- gh auth setup-git && git config --global url."https://github.com/".insteadOf git@github.com:' \
     && ok "GitHub: signed in as $("$MISE" exec -- gh api user --jq .login 2>/dev/null)" \
     || warn "GitHub: couldn't carry the login over. Run 'ranch login' on the server."
 }

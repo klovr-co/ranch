@@ -32,6 +32,9 @@ That's it. Run the same line on the next machine, and the next.
 | `ranch update` | Update every server you've added to the newest ranch (logins untouched) |
 | `ranch run -- <command>` | Run a command with its secrets from Infisical, e.g. `ranch run -- pnpm dev`. No `.env` files |
 | `ranch secrets connect [user@]machine` | From your main computer: give a server its own limited Infisical login |
+| `ranch secrets grant [machine]` | From your main computer: let servers you already connected see projects added since, without new keys |
+| `ranch secrets push <env>` | In a repo with `.ranch/secrets.yaml`: copy that Infisical environment to its Convex deployment (shows names only, asks first, never deletes) |
+| `ranch secrets status <env>` | Same check without changing anything; exits 1 if the two differ |
 | `ranch join` | At a new Linux server: join your network by scanning a QR code |
 | `ranch add [user@]machine` | From your main computer: set that server up remotely, logins carried over |
 | `ranch pair [user@]machine` | From your main computer: a fresh link to pair that server with your T3 Code app |
@@ -61,7 +64,7 @@ ranch add <machine-name>
 | Login | How it's done |
 |---|---|
 | Tailscale | Already done in step 1 |
-| GitHub | No clicks: your main computer passes its GitHub login over the secure connection |
+| GitHub | No clicks: your main computer passes its GitHub login over the secure connection. `git@github.com:` URLs are rewritten to HTTPS, so clones work without SSH keys |
 | Codex | No clicks: your Codex sign-in is copied over, as Codex recommends for headless machines |
 | Claude Code | One click: the sign-in link opens in your main computer's browser |
 | Infisical | No clicks: the server gets its own limited Infisical login, created from your main computer. Revoke one server without touching the rest |
