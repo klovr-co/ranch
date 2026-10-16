@@ -88,6 +88,29 @@ login_secrets() {
   fi
 }
 
+# Google Cloud: sign in with a link, like the others.
+login_gcloud() {
+  local g="$MISE exec -- gcloud"
+  if ! "$MISE" which gcloud >/dev/null 2>&1; then info "· Google Cloud gcloud not installed"; return; fi
+  local acct
+  acct="$($g auth list --filter=status:ACTIVE --format='value(account)' 2>/dev/null | head -1)"
+  if [ -n "$acct" ]; then
+    ok "Google Cloud $acct"
+  elif [ "${1:-}" = run ]; then
+    if headless; then
+      info "→ Google Cloud: open the link below on your phone or another computer, approve,"
+      info "  then paste the code it gives you back here."
+      $g auth login --no-launch-browser </dev/tty || warn "Google Cloud login skipped"
+    else
+      info "→ Google Cloud: sign in in the browser"
+      $g auth login </dev/tty || warn "Google Cloud login skipped"
+    fi
+    login_gcloud status
+  else
+    warn "Google Cloud not signed in"
+  fi
+}
+
 # ranch login        → sign in to anything missing
 # ranch login status → only report
 run_logins() {
@@ -100,6 +123,7 @@ run_logins() {
   login_github "$mode"
   login_tailscale "$mode"
   login_secrets "$mode"
+  login_gcloud "$mode"
   login_claude "$mode"
   login_codex "$mode"
   login_t3

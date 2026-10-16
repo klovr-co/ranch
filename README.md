@@ -25,7 +25,7 @@ That's it. Run the same line on the next machine, and the next.
 |---|---|
 | `ranch` | Set up or update this machine |
 | `ranch --team owner/repo` | Add your team's config, then set up or update |
-| `ranch login` | Sign in to anything missing (GitHub, Tailscale, Claude Code, Codex) |
+| `ranch login` | Sign in to anything missing (GitHub, Tailscale, Google Cloud, Claude Code, Codex) |
 | `ranch login status` | Show what's signed in |
 | `ranch doctor` | Show what's installed |
 | `ranch status` | This machine, every device on your network, and every server you've added |
