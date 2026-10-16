@@ -92,7 +92,7 @@ doctor() {
   detect_os
   step "Machine: $OS_NAME ($(uname -m))"
   local t
-  for t in mise git gh gcloud node pnpm claude codex tmux; do
+  for t in mise git gh gcloud uv node pnpm claude codex tmux; do
     if has "$t"; then ok "$t"; else warn "$t missing"; fi
   done
   if [ -n "$(ts_bin)" ]; then ok "tailscale"; else warn "tailscale missing"; fi

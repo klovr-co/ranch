@@ -31,6 +31,9 @@ install_base_tools() {
   # Secret manager CLI: secrets are injected when code runs (infisical run -- …), never saved to .env files.
   "$MISE" --quiet use --global --yes infisical@latest >/dev/null
   ok "infisical $("$MISE" exec -- infisical --version 2>/dev/null | awk '{print $3}')"
+  # uv: Python versions, projects and scripts (uv run …).
+  "$MISE" --quiet use --global --yes uv@latest >/dev/null
+  ok "uv $("$MISE" exec -- uv --version 2>/dev/null | awk '{print $2}')"
   # Google Cloud CLI (gcloud), for Cloud Run and other Google Cloud work. Sign in later with: gcloud auth login
   if "$MISE" --quiet use --global --yes gcloud@latest >/dev/null 2>&1; then
     ok "gcloud $("$MISE" exec -- gcloud --version 2>/dev/null | head -1 | awk '{print $4}')"
