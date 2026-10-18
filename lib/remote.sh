@@ -3,7 +3,7 @@
 #   at the server:          ranch join        → Tailscale only, approved by scanning a QR code
 #   on your main computer:  ranch add HOST    → full setup over Tailscale SSH, logins carried over
 
-RANCH_URL="xian-jun.github.io/ranch"
+RANCH_URL="klovr-co.github.io/ranch"
 
 ts_hostname() {
   "$(ts_bin)" status --json 2>/dev/null | sed -n 's/.*"HostName": *"\([^"]*\)".*/\1/p' | head -1

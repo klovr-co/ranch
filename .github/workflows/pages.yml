@@ -1,5 +1,5 @@
-# Publishes install.sh at https://xian-jun.github.io/ranch so the install line stays short:
-#   curl -fsSL xian-jun.github.io/ranch | bash
+# Publishes install.sh at https://klovr-co.github.io/ranch so the install line stays short:
+#   curl -fsSL klovr-co.github.io/ranch | bash
 name: Publish installer
 
 on:

@@ -5,7 +5,7 @@
 Run Claude Code and Codex agents, CI and other heavy work on servers instead of your laptop. `ranch` gives every machine — your Mac, an old laptop, a cloud server — the same tools, the same agent rules and the same logins, and connects them on a private network so you can reach any of them from anywhere.
 
 ```bash
-curl -fsSL xian-jun.github.io/ranch | bash
+curl -fsSL klovr-co.github.io/ranch | bash
 ```
 
 That's it. Run the same line on the next machine, and the next.
@@ -50,7 +50,7 @@ Signing in on a server with no screen means copying links and codes by hand. Ins
 **1. At the new server — one line, one scan**
 
 ```bash
-curl -fsSL xian-jun.github.io/ranch | bash -s -- join
+curl -fsSL klovr-co.github.io/ranch | bash -s -- join
 ```
 
 This installs only Tailscale and shows a QR code. Scan it with your phone and approve. Nothing to type or copy.
@@ -89,7 +89,7 @@ your-org/ranch-config
 ```
 
 ```bash
-curl -fsSL xian-jun.github.io/ranch | bash -s -- --team your-org/ranch-config
+curl -fsSL klovr-co.github.io/ranch | bash -s -- --team your-org/ranch-config
 ```
 
 Each team gets its own folder, `~/code/<team>/`. Its rules and tools apply only inside that folder, so you can belong to several teams on one machine without them mixing. Start from [`examples/team-config`](examples/team-config).

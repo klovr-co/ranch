@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # One-line installer:
-#   curl -fsSL xian-jun.github.io/ranch | bash                      # set up this machine
-#   curl -fsSL xian-jun.github.io/ranch | bash -s -- join           # just join the network; finish with `ranch add` from your main computer
-#   curl -fsSL xian-jun.github.io/ranch | bash -s -- --team owner/ranch-config
+#   curl -fsSL klovr-co.github.io/ranch | bash                      # set up this machine
+#   curl -fsSL klovr-co.github.io/ranch | bash -s -- join           # just join the network; finish with `ranch add` from your main computer
+#   curl -fsSL klovr-co.github.io/ranch | bash -s -- --team owner/ranch-config
 # Fetches this repo into ~/.local/share/ranch, then runs bin/ranch with the same arguments.
 set -euo pipefail
 
-RANCH_REPO="${RANCH_REPO:-https://github.com/xian-jun/ranch.git}"
-RANCH_TARBALL="${RANCH_TARBALL:-https://codeload.github.com/xian-jun/ranch/tar.gz/main}"
+RANCH_REPO="${RANCH_REPO:-https://github.com/klovr-co/ranch.git}"
+RANCH_TARBALL="${RANCH_TARBALL:-https://codeload.github.com/klovr-co/ranch/tar.gz/main}"
 RANCH_HOME="${RANCH_HOME:-$HOME/.local/share/ranch}"
 
 if [ -n "${RANCH_SOURCE_DIR:-}" ]; then

@@ -77,7 +77,7 @@ self_update() {
 adopt_git() {
   [ "$ROOT" = "$HOME/.local/share/ranch" ] && [ ! -d "$ROOT/.git" ] && has git || return 0
   git -C "$ROOT" init -q
-  git -C "$ROOT" remote add origin "${RANCH_REPO:-https://github.com/xian-jun/ranch.git}"
+  git -C "$ROOT" remote add origin "${RANCH_REPO:-https://github.com/klovr-co/ranch.git}"
   git -C "$ROOT" fetch -q origin main && git -C "$ROOT" reset -q --hard origin/main \
     && git -C "$ROOT" branch -q -u origin/main 2>/dev/null || true
 }
