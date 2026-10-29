@@ -1,5 +1,6 @@
 # T3 Code on Windows: runs in the background; the T3 app on your main computer controls it over Tailscale.
-# Skip it with RANCH_T3=0. Pick the release train with RANCH_T3_CHANNEL=stable|nightly.
+# T3 has no Windows background service, so ranch starts `t3 serve` at sign-in instead (Scheduled Task,
+# or a Startup shortcut if Windows won't allow the task). Skip T3 with RANCH_T3=0. Pick the release train with RANCH_T3_CHANNEL=stable|nightly.
 
 function Test-T3Wanted { $env:RANCH_T3 -ne '0' }
 
@@ -7,6 +8,45 @@ function Get-T3Channel {
   if ($env:RANCH_T3_CHANNEL) { return $env:RANCH_T3_CHANNEL }
   if ((Has t3) -and ((Run-Quiet t3 --version) -match 'nightly')) { return 'nightly' }
   return 'stable'
+}
+
+$T3TaskName = 'ranch-t3'
+$T3Port = 3773
+
+function Test-T3Running { [bool](Get-NetTCPConnection -LocalPort $T3Port -State Listen -ErrorAction SilentlyContinue) }
+
+# The PowerShell arguments that run the T3 server hidden. Expose it on the tailnet only when Tailscale is connected,
+# otherwise `t3 serve --tailscale-serve` would fail at sign-in.
+function Get-T3ServeArgs {
+  $t3 = (Get-Command t3).Source
+  $serve = 'serve'
+  $ts = Get-TailscaleBin
+  if ($ts) { $null = Run-Quiet $ts status; if ($LASTEXITCODE -eq 0) { $serve = 'serve --tailscale-serve' } }
+  return "-NoProfile -WindowStyle Hidden -Command `"& '$t3' $serve`""
+}
+
+# Start T3 at sign-in. Returns 'task', 'startup' or '' (neither worked).
+function Register-T3Startup($psArgs) {
+  try {
+    $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument $psArgs -WorkingDirectory $env:USERPROFILE
+    $trigger = New-ScheduledTaskTrigger -AtLogOn -User "$env:USERDOMAIN\$env:USERNAME"
+    $settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
+      -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1) -ExecutionTimeLimit (New-TimeSpan -Seconds 0)
+    Register-ScheduledTask -TaskName $T3TaskName -Action $action -Trigger $trigger -Settings $settings -Force -ErrorAction Stop | Out-Null
+    return 'task'
+  } catch {
+    try {
+      $lnk = Join-Path ([Environment]::GetFolderPath('Startup')) 'ranch-t3.lnk'
+      $sh = New-Object -ComObject WScript.Shell
+      $sc = $sh.CreateShortcut($lnk)
+      $sc.TargetPath = 'powershell.exe'
+      $sc.Arguments = $psArgs
+      $sc.WorkingDirectory = $env:USERPROFILE
+      $sc.WindowStyle = 7
+      $sc.Save()
+      return 'startup'
+    } catch { return '' }
+  }
 }
 
 function Install-T3 {
@@ -24,9 +64,16 @@ function Install-T3 {
   if (-not (Has t3)) { Warn "T3 install failed; skipping"; return }
   Ok "t3 $(Run-Quiet t3 --version) ($channel)"
 
-  # T3's background service only exists on Linux (systemd) and macOS (launchd), so on Windows
-  # it has to be started by hand until we add a logon task.
-  Info "T3 can't run as a background service on Windows yet. Start it with: t3"
+  # T3's own background service only exists on Linux (systemd) and macOS (launchd), so start `t3 serve` at sign-in.
+  $psArgs = Get-T3ServeArgs
+  $how = Register-T3Startup $psArgs
+  if (-not (Test-T3Running)) {
+    Start-Process powershell.exe -ArgumentList $psArgs -WindowStyle Hidden
+    Start-Sleep -Seconds 6
+  }
+  if (Test-T3Running) { Ok "T3 running in the background (starts again when you sign in)" }
+  else { Warn "T3 didn't start. Run 't3 serve' to see why." }
+  if (-not $how) { Warn "Couldn't set T3 to start at sign-in; run 'ranch' again after signing in, or start it with 't3 serve'." }
 }
 
 function Login-T3 {
@@ -34,8 +81,9 @@ function Login-T3 {
   if (-not (Has t3)) { Info "  T3 Code      not installed"; return }
   $sessions = Run-Quiet t3 auth session list
   $n = @($sessions -split "`n" | Where-Object { $_ -match '^  client:' }).Count
-  if ($n -gt 0) { Ok "T3 Code      $n device(s) paired" }
-  else { Warn "T3 Code      no devices paired (run: ranch pair)" }
+  if ($n -gt 0) { Ok "T3 Code      running, $n device(s) paired" }
+  elseif (Test-T3Running) { Warn "T3 Code      running, no devices paired (run: ranch pair)" }
+  else { Warn "T3 Code      not running (start it with: t3 serve, or run ranch)" }
 }
 
 # Pair this machine's T3 with the T3 app on your main computer. Run it here, then paste the link there.
