@@ -16,15 +16,21 @@ $RanchHome = if ($env:RANCH_HOME) { $env:RANCH_HOME } else { Join-Path $env:LOCA
 
 # Windows' default execution policy blocks .ps1 files, so run ranch with a process-only bypass.
 # Nothing about the machine's policy is changed.
+# No `exit` here: under `irm | iex` this script runs in your own window, and exit would close it.
 function Start-Ranch($root, $ranchArgs) {
   $ps = (Get-Process -Id $PID).Path
   & $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'bin\ranch.ps1') @ranchArgs
-  exit $LASTEXITCODE
+  # ranch ran in a child process, which can't change this window's PATH. Re-read it here so every tool
+  # it installed (git, gh, node, claude, ...) works in this window right away.
+  $machine = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+  $user = [Environment]::GetEnvironmentVariable('Path', 'User')
+  $env:Path = (($machine, $user) | Where-Object { $_ }) -join ';'
 }
 
 if ($env:RANCH_SOURCE_DIR) {
   # Local testing: run straight from a checkout.
   Start-Ranch $env:RANCH_SOURCE_DIR $args
+  return
 }
 
 $hasGit = [bool](Get-Command git -ErrorAction SilentlyContinue)
