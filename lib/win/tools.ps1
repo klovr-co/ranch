@@ -12,13 +12,19 @@ function Install-WingetPackage($id, $label) {
   if ($LASTEXITCODE -eq 0) { Ok "$label already installed"; return $true }
   Info "Installing $label (a Windows permission prompt may appear)..."
   & winget install --exact --id $id --silent --accept-package-agreements --accept-source-agreements | Out-Null
-  # -1978335189 (0x8A150011): already installed, nothing to upgrade.
+  # -1978335189 (0x8A15002B): nothing to upgrade, so it is already installed.
   if ($LASTEXITCODE -eq 0 -or $LASTEXITCODE -eq -1978335189) {
     Update-SessionPath
     Ok "installed $label"
     return $true
   }
-  Warn "$label install failed (winget exit code $LASTEXITCODE)"
+  if ($LASTEXITCODE -eq -1978335226) {
+    # 0x8A150006: winget couldn't launch the installer (admin approval declined, or blocked).
+    Warn "$label: Windows didn't let the installer start. If a permission prompt appeared, choose Yes."
+    Warn "Otherwise open PowerShell with 'Run as administrator' and run: winget install --exact --id $id"
+  } else {
+    Warn "$label install failed (winget exit code $LASTEXITCODE). Try: winget install --exact --id $id"
+  }
   return $false
 }
 
