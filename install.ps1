@@ -2,7 +2,7 @@
 #   irm klovr-co.github.io/ranch/install.ps1 | iex
 # With arguments (login, doctor, ...):
 #   & ([scriptblock]::Create((irm klovr-co.github.io/ranch/install.ps1))) login
-# Fetches this repo into %LOCALAPPDATA%\ranch, then runs bin\ranch.ps1 with the same arguments.
+# Fetches this repo into %LOCALAPPDATA%\ranch, then runs bin\ranch-windows.ps1 with the same arguments.
 # Keep this file ASCII: Windows PowerShell 5.1 misreads UTF-8 without a BOM.
 
 $ErrorActionPreference = 'Stop'
@@ -19,7 +19,7 @@ $RanchHome = if ($env:RANCH_HOME) { $env:RANCH_HOME } else { Join-Path $env:LOCA
 # No `exit` here: under `irm | iex` this script runs in your own window, and exit would close it.
 function Start-Ranch($root, $ranchArgs) {
   $ps = (Get-Process -Id $PID).Path
-  & $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'bin\ranch.ps1') @ranchArgs
+  & $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $root 'bin\ranch-windows.ps1') @ranchArgs
   # ranch ran in a child process, which can't change this window's PATH. Re-read it here so every tool
   # it installed (git, gh, node, claude, ...) works in this window right away.
   $machine = [Environment]::GetEnvironmentVariable('Path', 'Machine')

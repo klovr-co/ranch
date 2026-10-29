@@ -51,7 +51,7 @@ function Update-Self($ranchArgs) {
     Info "ranch updated; restarting"
     $env:RANCH_UPDATED = '1'
     $ps = (Get-Process -Id $PID).Path
-    & $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $ROOT 'bin\ranch.ps1') @ranchArgs
+    & $ps -NoProfile -ExecutionPolicy Bypass -File (Join-Path $ROOT 'bin\ranch-windows.ps1') @ranchArgs
     exit $LASTEXITCODE
   }
 }

@@ -1,1 +1,1 @@
-@powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0ranch.ps1" %*
+@powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0ranch-windows.ps1" %*
