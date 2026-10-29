@@ -25,6 +25,7 @@ ranch for Windows - add this machine to your ranch
   ranch doctor                Show what's installed
   ranch --no-login            Install or update, skip the sign-ins
 
+  ranch t3                    Install or update only T3 Code and start it
   ranch pair                  Pair T3 Code on this machine with the T3 app on your main computer
 
 Not on Windows yet: --team, status, update, run, secrets, join, add.
@@ -94,6 +95,7 @@ while ($i -lt $a.Count) {
       exit 0
     }
     '^--no-login$' { $logins = $false }
+    '^t3$' { Install-T3; exit 0 }
     '^pair$' {
       if ($i + 1 -lt $a.Count) { Test-Unsupported "pair $($a[$i + 1])" }
       Invoke-PairT3; exit 0

@@ -20,7 +20,7 @@ function Install-WingetPackage($id, $label) {
   }
   if ($LASTEXITCODE -eq -1978335226) {
     # 0x8A150006: winget couldn't launch the installer (admin approval declined, or blocked).
-    Warn "$label: Windows didn't let the installer start. If a permission prompt appeared, choose Yes."
+    Warn "${label}: Windows didn't let the installer start. If a permission prompt appeared, choose Yes."
     Warn "Otherwise open PowerShell with 'Run as administrator' and run: winget install --exact --id $id"
   } else {
     Warn "$label install failed (winget exit code $LASTEXITCODE). Try: winget install --exact --id $id"
