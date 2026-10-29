@@ -61,4 +61,5 @@ function Invoke-Logins($mode) {
   Login-Gcloud $mode
   Login-Claude $mode
   Login-Codex $mode
+  Login-T3
 }

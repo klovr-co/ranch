@@ -11,6 +11,7 @@ $ROOT = Split-Path -Parent $PSScriptRoot
 . (Join-Path $ROOT 'lib\win\tools.ps1')
 . (Join-Path $ROOT 'lib\win\network.ps1')
 . (Join-Path $ROOT 'lib\win\login.ps1')
+. (Join-Path $ROOT 'lib\win\t3.ps1')
 
 $RanchHome = Join-Path $env:LOCALAPPDATA 'ranch'
 
@@ -24,7 +25,9 @@ ranch for Windows - add this machine to your ranch
   ranch doctor                Show what's installed
   ranch --no-login            Install or update, skip the sign-ins
 
-Not on Windows yet: --team, status, update, run, secrets, join, add, pair.
+  ranch pair                  Pair T3 Code on this machine with the T3 app on your main computer
+
+Not on Windows yet: --team, status, update, run, secrets, join, add.
 Safe to re-run any time.
 '@ | Write-Host
 }
@@ -76,6 +79,7 @@ function Invoke-Doctor {
     if (Has $t) { Ok $t } else { Warn "$t missing" }
   }
   if (Get-TailscaleBin) { Ok 'tailscale' } else { Warn 'tailscale missing' }
+  if (Test-T3Wanted) { if (Has t3) { Ok 't3' } else { Warn 't3 missing' } }
 }
 
 $logins = $true
@@ -90,7 +94,11 @@ while ($i -lt $a.Count) {
       exit 0
     }
     '^--no-login$' { $logins = $false }
-    '^(status|update|run|secrets|join|add|pair|--team.*)$' { Test-Unsupported $a[$i] }
+    '^pair$' {
+      if ($i + 1 -lt $a.Count) { Test-Unsupported "pair $($a[$i + 1])" }
+      Invoke-PairT3; exit 0
+    }
+    '^(status|update|run|secrets|join|add|--team.*)$' { Test-Unsupported $a[$i] }
     default { Die "Unknown argument: $($a[$i]) (try --help)" }
   }
   $i++
@@ -102,6 +110,7 @@ Install-BaseTools
 Convert-ToClone
 Install-AgentClis
 Install-Tailscale
+Install-T3
 Install-Command
 if ($logins) { Invoke-Logins 'run' }
 

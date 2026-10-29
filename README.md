@@ -104,7 +104,7 @@ Each team gets its own folder, `~/code/<team>/`. Its rules and tools apply only 
 
 macOS, Ubuntu, Debian and Fedora. Arch is best effort.
 
-**Windows 11 (x64 and ARM64), early support.** `ranch`, `ranch login`, `ranch login status` and `ranch doctor` set up the machine with winget: git, gh, gcloud, uv, Node, pnpm, Claude Code, Codex and Tailscale. Not on Windows yet: `--team`, `status`, `update`, `run`, `secrets`, `join`, `add`, `pair`, and T3 Code in the background.
+**Windows 11 (x64 and ARM64), early support.** `ranch`, `ranch login`, `ranch login status` and `ranch doctor` set up the machine with winget: git, gh, gcloud, uv, Node, pnpm, Claude Code, Codex and Tailscale. T3 Code is installed too; `ranch pair` on the Windows machine prints a link to paste into the T3 app on your main computer. Not on Windows yet: `--team`, `status`, `update`, `run`, `secrets`, `join`, `add`.
 
 ## Roadmap
 
