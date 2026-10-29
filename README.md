@@ -10,6 +10,12 @@ curl -fsSL klovr-co.github.io/ranch | bash
 
 That's it. Run the same line on the next machine, and the next.
 
+On Windows 11 (PowerShell):
+
+```powershell
+irm klovr-co.github.io/ranch/install.ps1 | iex
+```
+
 ## What you get on every machine
 
 - **The same tools at the same versions** — Node, pnpm, `gh` and anything your team pins, via [mise](https://mise.jdx.dev)
@@ -97,6 +103,8 @@ Each team gets its own folder, `~/code/<team>/`. Its rules and tools apply only 
 ## Supported
 
 macOS, Ubuntu, Debian and Fedora. Arch is best effort.
+
+**Windows 11 (x64 and ARM64), early support.** `ranch`, `ranch login`, `ranch login status` and `ranch doctor` set up the machine with winget: git, gh, gcloud, uv, Node, pnpm, Claude Code, Codex and Tailscale. Not on Windows yet: `--team`, `status`, `update`, `run`, `secrets`, `join`, `add`, `pair`, and T3 Code in the background.
 
 ## Roadmap
 
