@@ -114,7 +114,7 @@ Install-AgentClis
 Install-Tailscale
 Install-T3
 Install-Command
-if ($logins) { Invoke-Logins 'run' }
+if ($logins) { Invoke-Logins 'run'; Invoke-AutoPairT3 }
 
 Step "Done"
 $missing = @('git','gh','claude','codex') | Where-Object { -not (Has $_) }

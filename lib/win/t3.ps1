@@ -76,11 +76,15 @@ function Install-T3 {
   if (-not $how) { Warn "Couldn't set T3 to start at sign-in; run 'ranch' again after signing in, or start it with 't3 serve'." }
 }
 
+function Get-T3PairedCount {
+  $sessions = Run-Quiet t3 auth session list
+  return @($sessions -split "`n" | Where-Object { $_ -match '^  client:' }).Count
+}
+
 function Login-T3 {
   if (-not (Test-T3Wanted)) { return }
   if (-not (Has t3)) { Info "  T3 Code      not installed"; return }
-  $sessions = Run-Quiet t3 auth session list
-  $n = @($sessions -split "`n" | Where-Object { $_ -match '^  client:' }).Count
+  $n = Get-T3PairedCount
   if ($n -gt 0) { Ok "T3 Code      running, $n device(s) paired" }
   elseif (Test-T3Running) { Warn "T3 Code      running, no devices paired (run: ranch pair)" }
   else { Warn "T3 Code      not running (start it with: t3 serve, or run ranch)" }
@@ -108,4 +112,12 @@ function Invoke-PairT3 {
     Warn "Couldn't create a pairing link. Is Tailscale connected (ranch login)? Output:"
     Info $out.Trim()
   }
+}
+
+# At the end of setup: if T3 is running and nothing is paired yet, make the pairing link now.
+function Invoke-AutoPairT3 {
+  if (-not (Test-T3Wanted) -or -not (Has t3) -or -not (Test-T3Running)) { return }
+  if ((Get-T3PairedCount) -gt 0) { return }
+  if (-not (Can-Prompt)) { return }
+  Invoke-PairT3
 }
