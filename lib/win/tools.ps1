@@ -40,27 +40,27 @@ function Install-BaseTools {
 
 function Install-AgentClis {
   Step "Agent CLIs"
-  if (Has claude) {
-    Ok "claude already present"
-  } else {
-    # Run the vendor script in its own PowerShell so an `exit` in it can't end ranch.
+  # The native installer puts claude in %USERPROFILE%\.local\bin. Make sure that folder is on PATH
+  # (now and for new terminals) whether we install claude or it was already there.
+  $claudeBin = Join-Path $env:USERPROFILE '.local\bin'
+  if (-not (Has claude) -and -not (Test-Path (Join-Path $claudeBin 'claude.exe'))) {
+    # Run the vendor script in its own PowerShell so an `exit` in it can't end ranch. Its output stays visible.
     $ps = (Get-Process -Id $PID).Path
-    & $ps -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex" | Out-Null
-    # The native installer puts claude in %USERPROFILE%\.local\bin.
-    $bin = Join-Path $env:USERPROFILE '.local\bin'
-    if (Test-Path (Join-Path $bin 'claude.exe')) { Add-UserPath $bin }
-    Update-SessionPath
-    if (Has claude) { Ok "installed claude (native installer)" } else { Warn "Claude Code install failed; see https://code.claude.com/docs/en/setup" }
+    & $ps -NoProfile -ExecutionPolicy Bypass -Command "irm https://claude.ai/install.ps1 | iex"
   }
+  if (Test-Path (Join-Path $claudeBin 'claude.exe')) { Add-UserPath $claudeBin }
+  Update-SessionPath
+  if (Has claude) { Ok "claude ready" } else { Warn "Claude Code isn't available. Run 'irm https://claude.ai/install.ps1 | iex' to see why." }
+
   if (Has codex) {
     Ok "codex already present"
   } elseif (Has npm) {
-    & npm install -g '@openai/codex@latest' 2>&1 | Out-Null
-    Update-SessionPath
+    & npm install -g '@openai/codex@latest'
     $npmBin = Join-Path $env:APPDATA 'npm'
-    if ((Test-Path $npmBin) -and -not (Has codex)) { Add-UserPath $npmBin }
-    if (Has codex) { Ok "installed codex" } else { Warn "Codex install failed. Run 'npm install -g @openai/codex' to see why." }
+    if (Test-Path $npmBin) { Add-UserPath $npmBin }
+    Update-SessionPath
+    if (Has codex) { Ok "installed codex" } else { Warn "Codex install failed; see the npm output above." }
   } else {
-    Warn "Codex needs Node (npm), which isn't available yet. Open a new terminal and run ranch again."
+    Warn "Codex needs Node (npm), which isn't available yet. Open a new PowerShell window and run ranch again."
   }
 }

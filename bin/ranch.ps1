@@ -106,4 +106,6 @@ Install-Command
 if ($logins) { Invoke-Logins 'run' }
 
 Step "Done"
-Info "This machine is on the ranch. Open a new terminal, then run 'ranch doctor' any time."
+$missing = @('git','gh','claude','codex') | Where-Object { -not (Has $_) }
+if ($missing) { Warn "Not found yet: $($missing -join ', '). Open a NEW PowerShell window and run 'ranch doctor'." }
+Info "This machine is on the ranch. Open a new PowerShell window so every tool is on your PATH, then run 'ranch doctor' any time."
