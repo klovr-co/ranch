@@ -24,10 +24,9 @@ function Install-T3 {
   if (-not (Has t3)) { Warn "T3 install failed; skipping"; return }
   Ok "t3 $(Run-Quiet t3 --version) ($channel)"
 
-  # Re-installing the service points it at the version just installed.
-  & t3 service install
-  if ($LASTEXITCODE -eq 0) { Ok "T3 set up to run in the background" }
-  else { Warn "Couldn't set T3 up in the background (it may not be supported on Windows yet). Run 't3' yourself to start it." }
+  # T3's background service only exists on Linux (systemd) and macOS (launchd), so on Windows
+  # it has to be started by hand until we add a logon task.
+  Info "T3 can't run as a background service on Windows yet. Start it with: t3"
 }
 
 function Login-T3 {
