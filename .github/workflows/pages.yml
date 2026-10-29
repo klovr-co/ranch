@@ -1,11 +1,12 @@
 # Publishes install.sh at https://klovr-co.github.io/ranch so the install line stays short:
 #   curl -fsSL klovr-co.github.io/ranch | bash
+# and install.ps1 at https://klovr-co.github.io/ranch/install.ps1 for Windows.
 name: Publish installer
 
 on:
   push:
     branches: [main]
-    paths: [install.sh, .github/workflows/pages.yml]
+    paths: [install.sh, install.ps1, .github/workflows/pages.yml]
   workflow_dispatch:
 
 permissions:
@@ -30,6 +31,7 @@ jobs:
           mkdir -p _site
           cp install.sh _site/index.html
           cp install.sh _site/install.sh
+          cp install.ps1 _site/install.ps1
       - uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
       - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
